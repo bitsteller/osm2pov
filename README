@@ -1,0 +1,146 @@
+Osm2Pov - build 3D model from OpenStreetMap data!
+Author Aleš Janda
+
+----------
+0. Content
+----------
+
+1. Introduction
+2. Installation
+3. Using
+4. Some programator's stuff
+5. Map scale
+6. Program licence
+7. How to do own map server
+8. Contact
+
+
+---------------
+1. Introduction
+---------------
+
+The osm2pov is converter from OSM file (file in OpenStreetMap native format) to POV format (native format of POV-Ray renderer). So: you can download an OSM file from OpenStreetMap of your place of interest (or cut some area using Osmosis) and you can convert it to 3D model.
+
+POV is format for POV-Ray but it's also language for full-fledged 3D models description. So it is possible to convert POV format to some 3D Modeller and walk in 3D city model. It's possible but I don't try it yet ;-)
+
+Osm2Pov is written in C++.
+
+
+---------------
+2. Installation
+---------------
+
+Installation is from source code. It requires:
+- g++ ver. 4.3 or greater (or some other C++ compiler)
+- libexpat1-dev (for XML reading)
+
+
+|| Compiling on Linux or other *nix systems: ||
+
+$ cd projectdir/osm2pov
+$ ./configure
+$ make
+
+If make failed, check if you really have libexpat1-dev, configure don't check it.
+If compiler doesn't know -std=c++0x option, check you have gcc at least 4.3. If you use other compiler, try remove this option from makefile. If it
+
+Now you have a binary ./osm2pov in current directory.
+If you want, you can install it:
+
+# make install
+
+
+|| Compiling on Windows: ||
+
+If you have Cygwin, you can compile osm2pov under it. Check that version of g++ is at least 4.3 (run g++ --version). Compilation is similar as in Linux.
+
+If you don't want use Cygwin and you want native program, try this:
+- open your favorite C++ IDE
+- create new project
+- add to it all *.cc files (*.cc file is the same as *.cpp; *.cc is only Linux convention)
+- add libexpat1 as library to settings both to include dir and to link with program
+- compile it
+
+I don't have much experience with compile in Windows so good luck :-)
+
+
+--------
+3. Using
+--------
+
+osm2pov INPUT_FILE.osm OUTPUT_FILE.pov [X Y]
+
+If converts OSM file INPUT_FILE.osm to POV-Ray file OUTPUT_FILE.pov.
+X and Y are optionally and there are coords of zoom 12, where Y is divided by 2 (see ./osm2pov for details).
+
+Using POV-Ray:
+
+1) you must have file "osm2pov-styles.inc" and "textures" folder in current folder
+2) download and install POV-Ray from Linux repositary or from http://www.povray.org/
+3) convert POV to image using command like this: "povray +W1024 +H1024 +B100 +D +A +Imyplace.pov +Omyplace.png" - myplace.pov is input file, W/H is width/height of image. If you have less memory, turn off thumbnail (type -D instead of +D). See povray documentation for more info
+4) See the output image :-)
+
+
+---------------------------
+4. Some programator's stuff
+---------------------------
+
+The main file is osm2pov.cc. Function main() use three basic class
+ - Primitives - as container for input data and reading input OSM file
+ - Osm2PovConverter - object for converting input objects to 3D objects
+ - PovWriter - for writing 3D objects to file in POV format
+
+Styles for output images are in file "osm2pov-styles.inc". There are defined class used in output POV file. See POV-Ray documentation to explain it.
+Tree images are in directory "textures".
+
+
+------------
+5. Map scale
+------------
+
+The output file has the same projection as Mapnik or Osmarenderer (Mercator) but in one exception - scale of Y axis is 2 times smaller than in Mapnik. It's because isometric map is viewed from 45 degrees, not 90 degrees as other maps. It causes that all the map is in weight 2 times smaller than in Mapnik.
+
+This is why isn't possible to do simple "layer switch" between isometric and other map.
+
+
+------------------
+6. Program licence
+------------------
+
+This program is released under GPL v3. See http://www.gnu.org/licenses/gpl.html for licence details.
+
+
+---------------------------
+7. How to do own map server ...or make own image
+---------------------------
+
+Render one big map is rendering many small tiles. Osm2Pov converter is now dimensed to generate tiles in zoom 12. Due to asymetric scaling (see Map scale), zoom 12 is equal to two tiles of Mapnik zoom 12.
+
+1) So, do the list of all [X,Y] coords in your place. X and Y are in zoom 12, Y divided by 2 (tiles count will 2 times smaller than in Mapnik, for example)
+
+2) For each [X,Y] coord, get OSM file of this area. It's useful use Osmosis (http://wiki.openstreetmap.org/wiki/Osmosis) to do it:
+osmosis --read-xml file=myarea.osm --bounding-box top=$MAXLAT left=$MINLON bottom=$MINLAT right=$MAXLON --write-xml file=myplace.osm
+
+3) Every place (myplace.osm), convert it to POV file using osm2pov:
+osm2pov myplace.osm myplace.pov $X $Y
+
+4) Next, every POV file render using POV-Ray:
+povray +W8192 +H8192 +B100 +FN -D +A +Imyplace.pov +Omyplace.png
+If you want to see thumbnail, type +D instead -D. Size 8192x8192 is ideal for maximal zoom 17, if you want bigger/lesser zoom, multiple/divide sizes by 2 in each zoom level
+
+5) Crop big PNG file into small tiles - you can using ImageMagick to this:
+convert -quality 92 -crop 256x256 myplace.png tiles/tmp/xx.jpg
+It also convert it to JPEG format. For resize, see "-resize" parameter. For montage, see "montage" command.
+
+6) Move files into directory tree and you have map :-)
+
+In folder "server-scripts" are some convert scripts for it. See it :-)
+
+
+----------
+8. Contact
+----------
+
+See http://osm.kyblsoft.cz/3dmapa/info to more details and contact.
+Hope you enjoyed it ;-)
+
