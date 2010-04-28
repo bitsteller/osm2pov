@@ -93,6 +93,37 @@ void Primitives::getWaysWithAttribute(list<const Way*> *output, const char *key,
 }
 
 void Primitives::getMultiPolygonsWithAttribute(list<MultiPolygon*> *output, const char *key, const char *value) {
+	unordered_set<uint64_t> ids_used_in_relations;
+
+	for (unordered_map<uint64_t,Relation*>::const_iterator it = this->relations.begin(); it != this->relations.end(); it++) {
+		const char *value_now = it->second->getAttribute(key);
+		if (value_now != NULL && (value == NULL || strcmp(value, value_now) == 0)) {
+			MultiPolygon *multipolygon = new MultiPolygon(it->second);
+			const vector<const PrimitiveRole*> *members = it->second->getRelationMembers();
+
+			for (vector<const PrimitiveRole*>::const_iterator it2 = members->begin(); it2 != members->end(); it2++) {
+				if ((*it2)->role == "outer") {
+					const Way *way = dynamic_cast<const Way*>((*it2)->primitive);
+					if (way == NULL) cerr << "Primitive with id " << (*it2)->primitive->getId() << " has role=outer and isn't way, ignoring." << endl;
+					else {
+						multipolygon->addOuterPart(way);
+						ids_used_in_relations.insert((*it2)->primitive->getId());
+					}
+				}
+				else if ((*it2)->role == "inner") {
+					const Way *way = dynamic_cast<const Way*>((*it2)->primitive);
+					if (way == NULL) cerr << "Primitive with id " << (*it2)->primitive->getId() << " has role=inner and isn't way, ignoring." << endl;
+					else multipolygon->addHole(way);
+				}
+			}
+
+			if (!multipolygon->hasAnyOuterPart()) cerr << "Relation with id " << it->second->getId() << " hasn't any \"outer\" element, ignoring." << endl;
+			else {
+				multipolygon->setDone();
+				if (multipolygon->isValid()) output->push_back(multipolygon);
+			}
+		}
+	}
 	for (unordered_map<uint64_t,Way*>::const_iterator it = this->ways.begin(); it != this->ways.end(); it++) {
 		const char *value_now = it->second->getAttribute(key);
 		if (value_now != NULL && (value == NULL || strcmp(value, value_now) == 0)) {
@@ -101,21 +132,31 @@ void Primitives::getMultiPolygonsWithAttribute(list<MultiPolygon*> *output, cons
 			for (vector<const Relation*>::const_iterator it2 = relations->begin(); it2 != relations->end(); it2++) {
 				const char *role = (*it2)->getRoleForId(it->second->getId());
 				if (strcmp(role, "outer") == 0) {
-					MultiPolygon *multipolygon = new MultiPolygon(it->second);
-					if (multipolygon->isValid()) {
+					if (ids_used_in_relations.find(it->second->getId()) == ids_used_in_relations.end()) {		//isn't used in relation already
+						MultiPolygon *multipolygon = new MultiPolygon(*it2);
 						const vector<const PrimitiveRole*> *members = (*it2)->getRelationMembers();
 						for (vector<const PrimitiveRole*>::const_iterator it3 = members->begin(); it3 != members->end(); it3++) {
-							if ((*it3)->role == "inner") {
-								if (strcmp((*it3)->primitive->name(), "way") != 0) cerr << "Inner element other than way in relation " << (*it2)->getId() << ", ignoring." << endl;
-								else multipolygon->addHole(dynamic_cast<const Way*>((*it3)->primitive));
+							if ((*it3)->role == "outer") {		//exist more outer ways for this polygon
+								const Way *way = dynamic_cast<const Way*>((*it3)->primitive);
+								if (way == NULL) cerr << "Outer element other than way in relation " << (*it2)->getId() << ", ignoring." << endl;
+								else if ((*it3)->primitive->getId() < it->second->getId()) {		//I make it only once; when processing way with lowest id
+									delete multipolygon;
+									goto NEXT_WAY;
+								}
+								else multipolygon->addOuterPart(way);
+							}
+							else if ((*it3)->role == "inner") {
+								const Way *way = dynamic_cast<const Way*>((*it3)->primitive);
+								if (way == NULL) cerr << "Inner element other than way in relation " << (*it2)->getId() << ", ignoring." << endl;
+								else multipolygon->addHole(way);
 							}
 						}
-						output->push_back(multipolygon);
+						multipolygon->setDone();
+						if (multipolygon->isValid()) output->push_back(multipolygon);
+						goto NEXT_WAY;
 					}
-					else delete multipolygon;
-					goto NEXT_WAY;
 				}
-				else if (strcmp(role, "inner") == 0) {
+/*				else if (strcmp(role, "inner") == 0) {
 					//if exists some way with the same searched attributes and have "outer" role, ignore this "inner" way
 					const vector<const PrimitiveRole*> *members = (*it2)->getRelationMembers();
 					for (vector<const PrimitiveRole*>::const_iterator it3 = members->begin(); it3 != members->end(); it3++) {
@@ -124,10 +165,12 @@ void Primitives::getMultiPolygonsWithAttribute(list<MultiPolygon*> *output, cons
 						}
 					}
 				}
-			}
+*/			}
 
 			//isn't in any relation, so add as common way
-			MultiPolygon *multipolygon = new MultiPolygon(it->second);
+			MultiPolygon *multipolygon = new MultiPolygon(NULL);
+			multipolygon->addOuterPart(it->second);
+			multipolygon->setDone();
 			if (multipolygon->isValid()) output->push_back(multipolygon);
 			else delete multipolygon;
 		}
@@ -140,8 +183,8 @@ void Primitives::getMultiPolygonsWithAttribute(list<MultiPolygon*> *output, cons
 	}
 }
 
-void Primitives::getDisusedAttributes(multimap<size_t,string> *output) {
-	for (unordered_map<string,size_t>::iterator it = this->disused_attributes.begin(); it != this->disused_attributes.end(); it++) {
+void Primitives::getDisusedAttributes(multimap<size_t,string> *output) const {
+	for (unordered_map<string,size_t>::const_iterator it = this->disused_attributes.begin(); it != this->disused_attributes.end(); it++) {
 		output->insert(make_pair(it->second, it->first));
 	}
 }
@@ -398,7 +441,7 @@ bool Primitives::loadFromXml(const char *filename) {
 		if (is_final) break;
 	}
 
-	if (load_xml_struct.current_primitive != NULL) cerr << "Internal error in XML parser (not-closed tag " << load_xml_struct.current_primitive->name() << ")" << endl;
+	if (load_xml_struct.current_primitive != NULL) cerr << "Internal error in XML parser (not-closed tag)" << endl;
 
 	XML_ParserFree(parser);
 	fclose(fp);

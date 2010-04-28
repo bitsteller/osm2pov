@@ -49,22 +49,26 @@ struct PointFieldItem {
 class MultiPolygon {
 	private:
 	bool is_valid;
-	vector<const XY*> outer_points;
-	const Way *main_way;
-	list<const vector<const XY*>*> holes;
+	bool is_done;
+	list<vector<const XY*> > outer_parts;
+	list<const Way*> outer_ways;
+	list<vector<const XY*> > holes;
 	vector<const Triangle*> triangles;
+	const class Relation *relation;  //NULL if isn't in any relation
 
-	bool addPolygon(const Way *way, vector<const XY*> *output);
 	void convertToTriangles(vector<const Triangle*> *triangles) const;
-	static double computeArea(const vector<const XY*> *polygon);
 
 	public:
-	MultiPolygon(const Way *main_way);
+	MultiPolygon(const Relation *relation);
 	~MultiPolygon();
-	bool isValid() const { return this->is_valid; }
+	bool isValid() const { assert(this->is_done); return this->is_valid; }
+	bool isDone() const { return this->is_valid; }
+	void addOuterPart(const Way *outer_part);
 	void addHole(const Way *hole);
-	const vector<const XY*> *getOuterPoints() const { return &this->outer_points; }
-	const list<const vector<const XY*>*> *getHoles() const { return &this->holes; }
+	bool hasAnyOuterPart() const { return !this->outer_ways.empty(); }
+	void setDone();
+	const list<vector<const XY*> > *getOuterParts() const { return &this->outer_parts; }
+	const list<vector<const XY*> > *getHoles() const { return &this->holes; }
 	const char *getAttribute(const char *key) const;
 	bool hasAttribute(const char *key, const char *value) const;
 	uint64_t getId() const;

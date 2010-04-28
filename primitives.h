@@ -15,7 +15,6 @@ class Primitive {
 	public:
 	Primitive(uint64_t id) : id(id) { }
 	virtual ~Primitive() { }
-	virtual const char *name() const = 0;
 	uint64_t getId() const { return this->id; }
 	const char *getAttribute(const char *key) const {
 		unordered_map<string,string>::const_iterator it = this->tags.find(key);
@@ -43,7 +42,6 @@ class Node : public Primitive {
 	virtual ~Node() { }
 	const float getLat() const { return this->lat; }
 	const float getLon() const { return this->lon; }
-	const char *name() const { return "node"; }
 };
 
 class Relation;
@@ -68,7 +66,8 @@ class Way : public Primitive {
 	const vector<const Relation*> *getRelations() const {
 		return &this->relations;
 	}
-	const char *name() const { return "way"; }
+	uint64_t getFirstNodeId() const { return this->nodes.at(0)->getId(); }
+	uint64_t getLastNodeId() const { return this->nodes.at(this->nodes.size()-1)->getId(); }
 };
 
 struct PrimitiveRole {
@@ -99,7 +98,6 @@ class Relation : public Primitive {
 	const vector<const PrimitiveRole*> *getRelationMembers() const {
 		return &this->members;
 	}
-	const char *name() const { return "relation"; }
 };
 
 class Primitives {
@@ -114,7 +112,7 @@ class Primitives {
 	unordered_map<string,const char*> lightly_ignored_attributes;
 	unordered_map<string,size_t> disused_attributes;
 
-	//copied from OpenStreetMap
+	//copied from OpenStreetMap wiki
 	double lon2tilex(double lon, int z) { return (((lon + 180.0) / 360.0 * pow(2.0, z))); }
 	double lat2tiley(double lat, int z) { return ((1.0 - log(tan(lat * M_PI / 180.0) + 1.0 / cos(lat * M_PI / 180.0)) / M_PI) / 2.0 * pow(2.0, z));	}
 	double tilex2lon(int x, int z)	{ return x / pow(2.0, z) * 360.0 - 180; }
@@ -178,7 +176,7 @@ class Primitives {
 	void getNodesWithAttribute(list<const Node*> *output, const char *key, const char *value);
 	void getWaysWithAttribute(list<const Way*> *output, const char *key, const char *value);
 	void getMultiPolygonsWithAttribute(list<MultiPolygon*> *output, const char *key, const char *value);
-	void getDisusedAttributes(multimap<size_t,string> *output);
+	void getDisusedAttributes(multimap<size_t,string> *output) const;
 };
 
 #endif /* PRIMITIVES_H_ */

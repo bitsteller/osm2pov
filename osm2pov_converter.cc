@@ -242,11 +242,17 @@ void Osm2PovConverter::drawBuildingWalls(const vector<const XY*> *points, double
 }
 
 void Osm2PovConverter::drawBuilding(MultiPolygon *multipolygon, double height, const char *style, const char *roof_style) {
-	drawBuildingWalls(multipolygon->getOuterPoints(), height, style);
-
-	const list<const vector<const XY*>*> *holes = multipolygon->getHoles();
-	for (list<const vector<const XY*>*>::const_iterator it = holes->begin(); it != holes->end(); it++) {
-		this->drawBuildingWalls(*it, height, style);
+	{
+		const list<vector<const XY*> > *outer_parts = multipolygon->getOuterParts();
+		for (list<vector<const XY*> >::const_iterator it = outer_parts->begin(); it != outer_parts->end(); it++) {
+			this->drawBuildingWalls(&(*it), height, style);
+		}
+	}
+	{
+		const list<vector<const XY*> > *holes = multipolygon->getHoles();
+		for (list<vector<const XY*> >::const_iterator it = holes->begin(); it != holes->end(); it++) {
+			this->drawBuildingWalls(&(*it), height, style);
+		}
 	}
 
 	this->pov_writer->writePolygon(multipolygon, height, roof_style);
