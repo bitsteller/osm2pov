@@ -1,0 +1,18 @@
+Osm2Pov changelog:
+
+0.2.1 (2010-04-28)
+ - fixed rendering seams of riverways
+ - water is now under forest floor
+
+0.2 (2010-04-25)
+ - support for tags in relation (not only tags in outer way) - tags in relation are preffered
+ - support for multipolygons with more than one outer part
+
+0.1.2 (2010-03-27)
+ - fix some compilation issues
+
+0.1.1 (2010-03-25)
+ - fix running and output without coords X and Y
+
+0.1 (2010-03-23)
+ - initial version of program

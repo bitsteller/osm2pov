@@ -129,6 +129,7 @@ int main(int argc, const char **argv) {
 	osm2pov_converter.drawWays("railway", "rail", 2, 0.09, "railway");
 
 	osm2pov_converter.drawWays("railway", "abandoned", 1.8, 0.045, "railway");
+	osm2pov_converter.drawWays("railway", "disused", 1.8, 0.045, "railway");
 	osm2pov_converter.drawAreas("leisure", "playground", 0.013, "playground");
 	osm2pov_converter.drawAreas("leisure", "pitch", 0.013, "playground");
 
@@ -139,6 +140,7 @@ int main(int argc, const char **argv) {
 
 	osm2pov_converter.drawBuildings("building", NULL, 4.5, "building", "building_roof");
 
+	osm2pov_converter.drawBuildings("leisure", "stadium", 12, "man_made_tower", "man_made_tower");
 	osm2pov_converter.drawTowers("man_made", "tower", 4, 25, "man_made_tower");
 	osm2pov_converter.drawTowers("amenity", "tower", 4, 25, "man_made_tower");
 	osm2pov_converter.drawBuildings("man_made", "tower", 25, "man_made_tower", "building_roof");
@@ -159,10 +161,10 @@ int main(int argc, const char **argv) {
 	osm2pov_converter.drawWays("waterway", "stream", 1, 0.00013, "river");
 	osm2pov_converter.drawWays("waterway", "canal", 2.5, 0.00013, "river");
 	osm2pov_converter.drawWays("waterway", "river", 5, 0.00013, "river");
-	osm2pov_converter.drawAreas("waterway", "riverbank", 0.0001, "river");
-	osm2pov_converter.drawAreas("natural", "water", 0.0001, "river");
-	osm2pov_converter.drawAreas("landuse", "basin", 0.0001, "river");
-	osm2pov_converter.drawAreas("landuse", "reservoir", 0.0001, "river");
+	osm2pov_converter.drawAreas("waterway", "riverbank", 0.00013, "river");
+	osm2pov_converter.drawAreas("natural", "water", 0.00013, "river");
+	osm2pov_converter.drawAreas("landuse", "basin", 0.00013, "river");
+	osm2pov_converter.drawAreas("landuse", "reservoir", 0.00013, "river");
 
 /*	{		//info about not used tags. Now isn't used :-)
 		multimap<size_t,string> disused_attributes;

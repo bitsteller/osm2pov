@@ -24,7 +24,10 @@ PovWriter::PovWriter(const char *filename, double minlat, double minlon, double 
 }
 
 PovWriter::~PovWriter() {
-	if (this->fs) this->fs.close();
+	if (this->fs) {
+		this->writeComment("End of file");
+		this->fs.close();
+	}
 }
 
 void PovWriter::writeComment(const char *comment) {
@@ -61,18 +64,19 @@ void PovWriter::writePolygon(MultiPolygon *polygon, double height, const char *s
 	this->fs << polygon->getPointsCount() << " ";
 
 	{
-		const vector<const XY*> *main_way = polygon->getOuterPoints();
+		const list<vector<const XY*> > *outer_parts = polygon->getOuterParts();
 		bool first = true;
-		for (vector<const XY*>::const_iterator it = main_way->begin(); it != main_way->end(); it++) {
-			this->fs << (first ? "<" : ",<") << this->convertLonToCoord((*it)->x) << "," << this->metres2unit(height) << "," << this->convertLatToCoord((*it)->y) << ">";
-			first = false;
+		for (list<vector<const XY*> >::const_iterator it = outer_parts->begin(); it != outer_parts->end(); it++) {
+			for (vector<const XY*>::const_iterator it2 = it->begin(); it2 != it->end(); it2++) {
+				this->fs << (first ? "<" : ",<") << this->convertLonToCoord((*it2)->x) << "," << this->metres2unit(height) << "," << this->convertLatToCoord((*it2)->y) << ">";
+				first = false;
+			}
 		}
 	}
 	{
-		const list<const vector<const XY*>*> *holes = polygon->getHoles();
-		for (list<const vector<const XY*>*>::const_iterator it = holes->begin(); it != holes->end(); it++) {
-			const vector<const XY*> *hole = *it;
-			for (vector<const XY*>::const_iterator it2 = hole->begin(); it2 != hole->end(); it2++) {
+		const list<vector<const XY*> > *holes = polygon->getHoles();
+		for (list<vector<const XY*> >::const_iterator it = holes->begin(); it != holes->end(); it++) {
+			for (vector<const XY*>::const_iterator it2 = it->begin(); it2 != it->end(); it2++) {
 				this->fs << ",<" << this->convertLonToCoord((*it2)->x) << "," << this->metres2unit(height) << "," << this->convertLatToCoord((*it2)->y) << ">";
 			}
 		}
@@ -105,7 +109,7 @@ void PovWriter::writeBox(double x, double y, double width, double height, double
 void PovWriter::writeCylinder(double x, double y, double radius, double height, const char *style) {
 	this->fs << "cylinder { ";
 	this->fs << "<0," << height << ",0>, ";
-	this->fs << "<0,0,0>, ";
+	this->fs << "<0,-1,0>, ";		//-1 because when it has too small height, povray don't render it
 	this->fs << radius << " ";
 	this->fs << "texture { " << style << " } ";
 	this->fs << "translate <" << x << ",0," << y << "> ";
