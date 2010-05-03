@@ -77,7 +77,7 @@ Using POV-Ray:
 
 1) you must have file "osm2pov-styles.inc" and "textures" folder in current folder
 2) download and install POV-Ray from Linux repositary or from http://www.povray.org/
-3) convert POV to image using command like this: "povray +W1024 +H1024 +B100 +D +A +Imyplace.pov +Omyplace.png" - myplace.pov is input file, W/H is width/height of image. If you have less memory, turn off thumbnail (type -D instead of +D). See povray documentation for more info
+3) convert POV to image using command like this: "povray +W1024 +H1024 +B100 +D +A +Imyplace.pov +Omyplace.png" - myplace.pov is input file, W/H is width/height of image (should be the same - square). If you have less memory, turn off thumbnail (type -D instead of +D). See povray documentation for more info
 4) See the output image :-)
 
 

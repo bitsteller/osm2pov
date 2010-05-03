@@ -21,7 +21,7 @@ class Osm2PovConverter {
 	void drawWaysWithBorder(const char *key, const char *value, double width, double height, const char *style, double border_width_percent, const char *border_style);
 	void drawAreas(const char *key, const char *value, double height, const char *style);
 	void drawForests(const char *key, const char *value, double floor_height, const char *floor_style, const char *tree_style_basic, size_t tree_style_coniferous_min, size_t tree_style_coniferous_max, size_t tree_style_ovwerall_max);
-	void drawBuildings(const char *key, const char *value, double default_height, const char *style, const char *roof_style);
+	void drawBuildings(const char *key, const char *value, double default_height, const char *style, const char *roof_style_default, const char *roof_style_religious = NULL);
 };
 
 

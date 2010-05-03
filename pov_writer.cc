@@ -11,6 +11,23 @@ PovWriter::PovWriter(const char *filename, double minlat, double minlon, double 
 	this->maxlat = maxlat;
 	this->maxlon = maxlon;
 
+	{			//fix coords to make area square
+		const double weighted_lat_diff = (this->maxlat - this->minlat)/LAT_WEIGHT;
+		const double weighted_lon_diff = (this->maxlon - this->minlon)/LON_WEIGHT;
+		if (weighted_lat_diff > weighted_lon_diff) {
+			const double lon_center = (this->minlon + this->maxlon)/2;
+			const double new_diff_to_center = (lon_center-this->minlon)*(weighted_lat_diff/weighted_lon_diff);
+			this->minlon = lon_center - new_diff_to_center;
+			this->maxlon = lon_center + new_diff_to_center;
+		}
+		else {
+			const double lat_center = (this->minlat + this->maxlat)/2;
+			const double new_diff_to_center = (lat_center-this->minlat)*(weighted_lon_diff/weighted_lat_diff);
+			this->minlat = lat_center - new_diff_to_center;
+			this->maxlat = lat_center + new_diff_to_center;
+		}
+	}
+
 	this->fs.open(filename);
 	if (!this->fs) {
 		cerr << "Cannot open " << filename << "!" << endl;
@@ -19,7 +36,7 @@ PovWriter::PovWriter(const char *filename, double minlat, double minlon, double 
 
 	this->fs.precision(12);
 
-	this->fs << "camera { orthographic location <0,0,-230> direction <0,0,13> up <0,70.7,0> right <100,0,0> look_at <0,0,0> translate <100,0,0> rotate <45,0,0> }" << endl;
+	this->fs << "camera { orthographic location <0,0,-230> direction <0,0,13> up <0," << ((this->maxlat-this->minlat)*69.71/LAT_WEIGHT) << ",0> right <" << ((this->maxlon-this->minlon)*100/LON_WEIGHT) << ",0,0> look_at <0,0,0> translate <100,0,0> rotate <45,0,0> }" << endl;
 	this->fs << "#include \"osm2pov-styles.inc\"" << endl;
 }
 

@@ -144,15 +144,6 @@ class Primitives {
 	double getMinLon() const { return this->minlon; }
 	double getMaxLat() const { return this->maxlat; }
 	double getMaxLon() const { return this->maxlon; }
-	double metres2unit(double metres) {
-		return metres / 60;
-	}
-	double convertLatToCoord(double lat) const {
-		return (lat - this->getMaxLat()) / (this->getMaxLat()-this->getMinLat()) * 100 + 50;
-	}
-	double convertLonToCoord(double lon) const {
-		return (lon - this->getMinLon()) / (this->getMaxLon()-this->getMinLon()) * 100 + 50;
-	}
 	void setBounds(double minlat, double minlon, double maxlat, double maxlon);
 	void addNode(uint64_t id, Node *node) {
 		this->nodes[id] = node;

@@ -7,6 +7,7 @@ sky_sphere { pigment { rgb <0.2, 0.4, 0.9> } }
 #declare ground=texture { pigment { rgb <0.7,0.97,0.3> } }  // bozo scale 0.1 color_map { [0.00 color <0.65,0.95,0.2> ] [0.50 color rgb <0.7,0.97,0.3> ] [1.00 color <0.75,1,0.35> ] } } hollow on }
 #declare building=texture { pigment { agate scale 0.1 color_map { [0.2 color rgb <0.98,0.98,0.58> ] [0.8 color rgb <1,1,0.6> ] } } finish { diffuse 0.6 ambient 0.4 } }
 #declare building_roof=texture { pigment { rgb <0.7,0.2,0.1> } finish { diffuse 0.6 ambient 0.6 } }
+#declare building_religious_roof=texture { pigment { rgb <0.1,0.1,0.1> } finish { diffuse 0.6 ambient 0.6 } }
 #declare highway=texture { pigment { agate scale 0.01 color_map { [0.2 color rgb <0.25,0.3,0.35> ] [0.5 color rgb <0.22,0.27,0.32> ] [0.8 color rgb <0.2,0.25,0.3> ] } } finish { phong 1 } }
 #declare highway_area=texture { pigment { agate scale 0.01 color_map { [0.2 color rgb <0.55,0.57,0.6> ] [0.5 color rgb <0.52,0.55,0.59> ] [0.8 color rgb <0.5,0.52,0.55> ] } } finish { phong 1 } }
 #declare highway_border=texture { pigment { rgb <0.9,0.9,0.9> } finish { phong 1 ambient 0.4 } }

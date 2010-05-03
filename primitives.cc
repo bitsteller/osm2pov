@@ -380,13 +380,6 @@ void XmlStartElement(void *user_data, const char *name, const char **attributes)
 
 		if (minlat_set && minlon_set && maxlat_set && maxlon_set) {
 			if (!data->primitives->isBoundsSet()) {
-				//TODO do something with scaling - now it's dimensed only for area in size of zoom 12
-				//so, for now, we simulate that size (very stupid)
-				minlat = (minlat + maxlat)/2 - 0.0569;
-				maxlat = minlat + 2*0.0569;
-				minlon = (minlon + maxlon)/2 - 0.0439;
-				maxlon = minlon + 2*0.0439;
-
 				data->primitives->setBounds(minlat, minlon, maxlat, maxlon);
 			}
 			else cerr << "Bounds is set more than once!" << endl;
@@ -464,13 +457,6 @@ bool Primitives::loadFromXml(const char *filename) {
 			cerr << "Error while computing area bounds." << endl;
 			return false;
 		}
-
-		//TODO do something with scaling - now it's dimensed only for area in size of zoom 12
-		//so, for now, we simulate that size (very stupid)
-		this->minlat = (this->minlat + this->maxlat)/2 - 0.0569;
-		this->maxlat = this->minlat + 2*0.0569;
-		this->minlon = (this->minlon + this->maxlon)/2 - 0.0439;
-		this->maxlon = this->minlon + 2*0.0439;
 	}
 
 	cout << "Area: LAT " << this->minlat << " - " << this->maxlat << ", LON " << this->minlon << " - " << this->maxlon << endl;

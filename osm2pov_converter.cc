@@ -25,16 +25,16 @@ void Osm2PovConverter::drawTowers(const char *key, const char *value, double wid
 			this->pov_writer->writeComment(s.str().c_str());
 		}
 
-		double x = this->primitives->convertLonToCoord((*it)->getLon());
-		double y = this->primitives->convertLatToCoord((*it)->getLat());
+		double x = this->pov_writer->convertLonToCoord((*it)->getLon());
+		double y = this->pov_writer->convertLatToCoord((*it)->getLat());
 
-		this->point_field.addPoint((*it)->getLon(), (*it)->getLat(), primitives->metres2unit(width+1.5)*2);
+		this->point_field.addPoint((*it)->getLon(), (*it)->getLat(), this->pov_writer->metres2unit(width+1.5)*2);
 
 		double height = default_height;
 		const char *str = (*it)->getAttribute("height");
 		if (str != NULL) height = readHeight(str);
 
-		this->pov_writer->writeCylinder(x, y, primitives->metres2unit(width)/2, primitives->metres2unit(height), style);
+		this->pov_writer->writeCylinder(x, y, this->pov_writer->metres2unit(width)/2, this->pov_writer->metres2unit(height), style);
 	}
 }
 
@@ -43,23 +43,23 @@ void Osm2PovConverter::drawWay(const vector<const Node*> *nodes, double width, d
 	double x_before, y_before;
 	double lon_before, lat_before;
 	for (vector<const Node*>::const_iterator it = nodes->begin(); it != nodes->end(); it++) {
-		double x = this->primitives->convertLonToCoord((*it)->getLon());
-		double y = this->primitives->convertLatToCoord((*it)->getLat());
+		double x = this->pov_writer->convertLonToCoord((*it)->getLon());
+		double y = this->pov_writer->convertLatToCoord((*it)->getLat());
 
 		if (first) {
-			this->point_field.addPoint((*it)->getLon(), (*it)->getLat(), primitives->metres2unit(width+1.5)*2);
+			this->point_field.addPoint((*it)->getLon(), (*it)->getLat(), this->pov_writer->metres2unit(width+1.5)*2);
 			first = false;
 		}
 		else {
-			this->point_field.addPointsInDistance(lon_before, lat_before, (*it)->getLon(), (*it)->getLat(), primitives->metres2unit(width+1.5)*2);
+			this->point_field.addPointsInDistance(lon_before, lat_before, (*it)->getLon(), (*it)->getLat(), this->pov_writer->metres2unit(width+1.5)*2);
 			double x_delta = x-x_before, y_delta = y-y_before;
 			double angle = (-(atan2(y_delta,x_delta) * 180 / M_PI)) + 180;
 			double length = sqrt(x_delta*x_delta+y_delta*y_delta);
 
-			this->pov_writer->writeBox(x, y, primitives->metres2unit(width), primitives->metres2unit(height), length, angle, style);
+			this->pov_writer->writeBox(x, y, this->pov_writer->metres2unit(width), this->pov_writer->metres2unit(height), length, angle, style);
 		}
 
-		this->pov_writer->writeCylinder(x, y, primitives->metres2unit(width)/2, primitives->metres2unit(height), style);
+		this->pov_writer->writeCylinder(x, y, this->pov_writer->metres2unit(width)/2, this->pov_writer->metres2unit(height), style);
 
 		x_before = x; y_before = y;
 		lon_before = (*it)->getLon(); lat_before = (*it)->getLat();
@@ -123,11 +123,11 @@ void Osm2PovConverter::drawArea(uint64_t area_id, const vector<const Node*> *nod
 	vector<double> coords;
 
 	for (vector<const Node*>::const_iterator it2 = nodes->begin(); it2 != nodes->end(); it2++) {
-		double lat = this->primitives->convertLatToCoord((*it2)->getLat());
-		double lon = this->primitives->convertLonToCoord((*it2)->getLon());
+		double lat = this->pov_writer->convertLatToCoord((*it2)->getLat());
+		double lon = this->pov_writer->convertLonToCoord((*it2)->getLon());
 
 		coords.push_back(lon);
-		coords.push_back(this->primitives->metres2unit(height));
+		coords.push_back(this->pov_writer->metres2unit(height));
 		coords.push_back(lat);
 	}
 
@@ -199,15 +199,15 @@ void Osm2PovConverter::drawBuildingWalls(const vector<const XY*> *points, double
 
 	double lon_before, lat_before;
 	for (vector<const XY*>::const_iterator it = points->begin(); it != points->end(); it++) {
-		double x = this->primitives->convertLonToCoord((*it)->x);
-		double y = this->primitives->convertLatToCoord((*it)->y);
+		double x = this->pov_writer->convertLonToCoord((*it)->x);
+		double y = this->pov_writer->convertLatToCoord((*it)->y);
 
 		if (first) {
-			this->point_field.addPoint((*it)->x, (*it)->y, primitives->metres2unit(3.5)*2);
+			this->point_field.addPoint((*it)->x, (*it)->y, this->pov_writer->metres2unit(3.5)*2);
 			first = false;
 		}
 		else {
-			this->point_field.addPointsInDistance(lon_before, lat_before, (*it)->x, (*it)->y, primitives->metres2unit(3.5)*2);
+			this->point_field.addPointsInDistance(lon_before, lat_before, (*it)->x, (*it)->y, this->pov_writer->metres2unit(3.5)*2);
 
 			vector<double> coords;
 
@@ -216,11 +216,11 @@ void Osm2PovConverter::drawBuildingWalls(const vector<const XY*> *points, double
 			coords.push_back(y);
 
 			coords.push_back(x);
-			coords.push_back(this->primitives->metres2unit(height));
+			coords.push_back(this->pov_writer->metres2unit(height));
 			coords.push_back(y);
 
 			coords.push_back(x_before);
-			coords.push_back(this->primitives->metres2unit(height));
+			coords.push_back(this->pov_writer->metres2unit(height));
 			coords.push_back(y_before);
 
 			coords.push_back(x_before);
@@ -242,23 +242,24 @@ void Osm2PovConverter::drawBuildingWalls(const vector<const XY*> *points, double
 }
 
 void Osm2PovConverter::drawBuilding(MultiPolygon *multipolygon, double height, const char *style, const char *roof_style) {
-	{
+	{		//outer walls of building
 		const list<vector<const XY*> > *outer_parts = multipolygon->getOuterParts();
 		for (list<vector<const XY*> >::const_iterator it = outer_parts->begin(); it != outer_parts->end(); it++) {
 			this->drawBuildingWalls(&(*it), height, style);
 		}
 	}
-	{
+	{		//inner walls of building (if building have any)
 		const list<vector<const XY*> > *holes = multipolygon->getHoles();
 		for (list<vector<const XY*> >::const_iterator it = holes->begin(); it != holes->end(); it++) {
 			this->drawBuildingWalls(&(*it), height, style);
 		}
 	}
 
+			//roof
 	this->pov_writer->writePolygon(multipolygon, height, roof_style);
 }
 
-void Osm2PovConverter::drawBuildings(const char *key, const char *value, double default_height, const char *style, const char *roof_style) {
+void Osm2PovConverter::drawBuildings(const char *key, const char *value, double default_height, const char *style, const char *roof_style_default, const char *roof_style_religious) {
 	list<MultiPolygon*> multipolygons;
 	this->primitives->getMultiPolygonsWithAttribute(&multipolygons, key, value);
 	for (list<MultiPolygon*>::iterator it = multipolygons.begin(); it != multipolygons.end(); it++) {
@@ -268,7 +269,11 @@ void Osm2PovConverter::drawBuildings(const char *key, const char *value, double 
 		if (extra_layer < 0) extra_layer = 0;//!
 
 		double height = default_height;
-		if ((*it)->hasAttribute("amenity", "place_of_worship")) height *= 2;
+		const char *roof_style = roof_style_default;
+		if ((*it)->hasAttribute("amenity", "place_of_worship")) {
+			height *= 2;
+			roof_style = roof_style_religious;
+		}
 		str = (*it)->getAttribute("building:levels");
 		if (str != NULL) height = 4 + (atof(str)-1) * 3;
 		str = (*it)->getAttribute("building:height");

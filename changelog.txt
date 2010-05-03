@@ -1,5 +1,9 @@
 Osm2Pov changelog:
 
+0.2.2 (2010-05-03)
+ - fixed scaling - output POV file is adaptable to size of input image so any input area size is now possible
+ - styles: buildings with amenity=place_of_workship have black roof
+ 
 0.2.1 (2010-04-28)
  - fixed rendering seams of riverways
  - water is now above forest floor

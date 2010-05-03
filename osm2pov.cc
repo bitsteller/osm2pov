@@ -138,7 +138,7 @@ int main(int argc, const char **argv) {
 
 	osm2pov_converter.drawAreas("landuse", "cemetery", 0.012, "cemetery");
 
-	osm2pov_converter.drawBuildings("building", NULL, 4.5, "building", "building_roof");
+	osm2pov_converter.drawBuildings("building", NULL, 4.5, "building", "building_roof", "building_religious_roof");
 
 	osm2pov_converter.drawBuildings("leisure", "stadium", 12, "man_made_tower", "man_made_tower");
 	osm2pov_converter.drawTowers("man_made", "tower", 4, 25, "man_made_tower");
