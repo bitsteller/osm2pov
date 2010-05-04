@@ -12,7 +12,7 @@ class PovWriter {
 	double minlat, minlon, maxlat, maxlon;
 
 	public:
-	PovWriter(const char *filename, double minlat, double minlon, double maxlat, double maxlon);
+	PovWriter(const char *filename, double minlat, double minlon, double maxlat, double maxlon, bool fix_size_to_square);
 	~PovWriter();
 	bool isOpened() const {
 		return this->fs;
@@ -23,7 +23,7 @@ class PovWriter {
 	void writePolygon(const Polygon3D *polygon, const char *style);
 	void writeBox(double x, double y, double width, double height, double length, double angle, const char *style);
 	void writeCylinder(double x, double y, double radius, double height, const char *style);
-	void writeSprite(double x, double y, const char *sprite_style, size_t sprite_style_number);
+	void writeSprite(double x, double y, const char *sprite_style, size_t sprite_style_number, double scale);
 
 	double convertLatToCoord(double lat) const {
 		return (lat - (this->minlat+this->maxlat)/2) / LAT_WEIGHT * 100;

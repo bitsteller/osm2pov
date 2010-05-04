@@ -21,7 +21,9 @@ void Osm2PovConverter::drawTowers(const char *key, const char *value, double wid
 	for (list<const Node*>::iterator it = nodes.begin(); it != nodes.end(); it++) {
 		{
 			stringstream s;
-			s << "Node " << (*it)->getId();
+			s << "Node " << (*it)->getId() << " (tag " << key;
+			if (value != NULL) s << "=" << value;
+			s << ")";
 			this->pov_writer->writeComment(s.str().c_str());
 		}
 
@@ -38,7 +40,7 @@ void Osm2PovConverter::drawTowers(const char *key, const char *value, double wid
 	}
 }
 
-void Osm2PovConverter::drawWay(const vector<const Node*> *nodes, double width, double height, const char *style) {
+void Osm2PovConverter::drawWay(const vector<const Node*> *nodes, double width, double height, const char *style, bool including_links) {
 	bool first = true;
 	double x_before, y_before;
 	double lon_before, lat_before;
@@ -59,14 +61,15 @@ void Osm2PovConverter::drawWay(const vector<const Node*> *nodes, double width, d
 			this->pov_writer->writeBox(x, y, this->pov_writer->metres2unit(width), this->pov_writer->metres2unit(height), length, angle, style);
 		}
 
-		this->pov_writer->writeCylinder(x, y, this->pov_writer->metres2unit(width)/2, this->pov_writer->metres2unit(height), style);
+		if (including_links)
+                        this->pov_writer->writeCylinder(x, y, this->pov_writer->metres2unit(width)/2, this->pov_writer->metres2unit(height), style);
 
 		x_before = x; y_before = y;
 		lon_before = (*it)->getLon(); lat_before = (*it)->getLat();
 	}
 }
 
-void Osm2PovConverter::drawWays(const char *key, const char *value, double width, double height, const char *style) {
+void Osm2PovConverter::drawWays(const char *key, const char *value, double width, double height, const char *style, bool including_links) {
 	list<const Way*> ways;
 	this->primitives->getWaysWithAttribute(&ways, key, value);
 	for (list<const Way*>::iterator it = ways.begin(); it != ways.end(); it++) {
@@ -84,11 +87,13 @@ void Osm2PovConverter::drawWays(const char *key, const char *value, double width
 
 		{
 			stringstream s;
-			s << "Way " << (*it)->getId();
+			s << "Way " << (*it)->getId() << " (tag " << key;
+			if (value != NULL) s << "=" << value;
+			s << ")";
 			this->pov_writer->writeComment(s.str().c_str());
 		}
 
-		this->drawWay((*it)->getNodes(), width, height+extra_layer, style);
+		this->drawWay((*it)->getNodes(), width, height+extra_layer, style, including_links);
 	}
 }
 
@@ -98,8 +103,10 @@ void Osm2PovConverter::drawWaysWithBorder(const char *key, const char *value, do
 	for (list<const Way*>::iterator it = ways.begin(); it != ways.end(); it++) {
 		if ((*it)->hasAttribute("area", "yes")) {
 			stringstream s;
-			s << "Area (closed way with area=yes) " << (*it)->getId();
-			pov_writer->writeComment(s.str().c_str());
+			s << "Area (closed way with area=yes) " << (*it)->getId() << " (tag " << key;
+			if (value != NULL) s << "=" << value;
+			s << ")";
+			this->pov_writer->writeComment(s.str().c_str());
 
 			drawArea((*it)->getId(), (*it)->getNodes(), height+0.0001, strcmp(style,"highway") == 0 ? "highway_area" : style);
 			continue;
@@ -111,11 +118,13 @@ void Osm2PovConverter::drawWaysWithBorder(const char *key, const char *value, do
 
 		{
 			stringstream s;
-			s << "Way " << (*it)->getId() << " with border";
-			pov_writer->writeComment(s.str().c_str());
+			s << "Way " << (*it)->getId() << " with border (tag " << key;
+			if (value != NULL) s << "=" << value;
+			s << ")";
+			this->pov_writer->writeComment(s.str().c_str());
 		}
-		drawWay((*it)->getNodes(), width, height-0.0011+extra_layer, border_style);
-		drawWay((*it)->getNodes(), width-border_width_percent*width/100*2, height+extra_layer, (*it)->hasAttribute("tunnel", "yes") && strcmp(style, "highway") == 0 ? "highway_tunnel" : style);
+		drawWay((*it)->getNodes(), width, height-0.0011+extra_layer, border_style, true);
+		drawWay((*it)->getNodes(), width-border_width_percent*width/100*2, height+extra_layer, (*it)->hasAttribute("tunnel", "yes") && strcmp(style, "highway") == 0 ? "highway_tunnel" : style, true);
 	}
 }
 
@@ -145,7 +154,9 @@ void Osm2PovConverter::drawAreas(const char *key, const char *value, double heig
 
 		{
 			stringstream s;
-			s << "Area (closed way) " << (*it)->getId();
+			s << "Area (closed way) " << (*it)->getId() << " (tag " << key;
+			if (value != NULL) s << "=" << value;
+			s << ")";
 			this->pov_writer->writeComment(s.str().c_str());
 		}
 		this->pov_writer->writePolygon(*it, height+extra_layer, style);
@@ -163,13 +174,17 @@ void Osm2PovConverter::drawForests(const char *key, const char *value, double fl
 
 		{
 			stringstream s;
-			s << "Forest with id " << (*it)->getId() << " - outline";
+			s << "Forest with id " << (*it)->getId() << " - outline (tag " << key;
+			if (value != NULL) s << "=" << value;
+			s << ")";
 			pov_writer->writeComment(s.str().c_str());
 		}
 		this->pov_writer->writePolygon(*it, floor_height+extra_layer, floor_style);
 		{
 			stringstream s;
-			s << "Forest with id " << (*it)->getId() << " - trees";
+			s << "Forest with id " << (*it)->getId() << " - trees (tag " << key;
+			if (value != NULL) s << "=" << value;
+			s << ")";
 			pov_writer->writeComment(s.str().c_str());
 		}
 
@@ -184,12 +199,28 @@ void Osm2PovConverter::drawForests(const char *key, const char *value, double fl
 		vector<PointFieldItem*> trees;
 		(*it)->computeRegularInsidePoints(&trees, &this->point_field, tree_style_min, tree_style_max);
 		for (vector<PointFieldItem*>::iterator it2 = trees.begin(); it2 != trees.end(); it2++) {
-			this->pov_writer->writeSprite((*it2)->xy->x, (*it2)->xy->y, tree_style_basic, (*it2)->item_type);
+			this->pov_writer->writeSprite((*it2)->xy->x, (*it2)->xy->y, tree_style_basic, (*it2)->item_type, 0.3);
 			delete (*it2)->xy;
 			delete *it2;
 		}
 
 		delete *it;
+	}
+}
+
+void Osm2PovConverter::drawObjects(const char *key, const char *value, const char *style_basic, double scale, int min_variation, int max_variation) {
+	list<const Node*> nodes;
+	this->primitives->getNodesWithAttribute(&nodes, key, value);
+	for (list<const Node*>::const_iterator it = nodes.begin(); it != nodes.end(); it++) {
+		{
+			stringstream s;
+			s << "Node " << (*it)->getId() << " (tag " << key;
+			if (value != NULL) s << "=" << value;
+			s << ")";
+			this->pov_writer->writeComment(s.str().c_str());
+		}
+
+		this->pov_writer->writeSprite((*it)->getLon(), (*it)->getLat(), style_basic, rand() % (max_variation-min_variation+1) + min_variation, scale);
 	}
 }
 
@@ -282,8 +313,10 @@ void Osm2PovConverter::drawBuildings(const char *key, const char *value, double 
 
 		{
 			stringstream s;
-			s << "Way " << (*it)->getId();
-			pov_writer->writeComment(s.str().c_str());
+			s << "Building " << (*it)->getId() << " (tag " << key;
+			if (value != NULL) s << "=" << value;
+			s << ")";
+			this->pov_writer->writeComment(s.str().c_str());
 		}
 
 		this->drawBuilding(*it, height+extra_layer, style, roof_style);

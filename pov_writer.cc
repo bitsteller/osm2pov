@@ -5,13 +5,13 @@
 #include "primitives.h"
 
 
-PovWriter::PovWriter(const char *filename, double minlat, double minlon, double maxlat, double maxlon) {
+PovWriter::PovWriter(const char *filename, double minlat, double minlon, double maxlat, double maxlon, bool fix_size_to_square) {
 	this->minlat = minlat;
 	this->minlon = minlon;
 	this->maxlat = maxlat;
 	this->maxlon = maxlon;
 
-	{			//fix coords to make area square
+	if (fix_size_to_square) {			//fix coords to make area square
 		const double weighted_lat_diff = (this->maxlat - this->minlat)/LAT_WEIGHT;
 		const double weighted_lon_diff = (this->maxlon - this->minlon)/LON_WEIGHT;
 		if (weighted_lat_diff > weighted_lon_diff) {
@@ -36,7 +36,7 @@ PovWriter::PovWriter(const char *filename, double minlat, double minlon, double 
 
 	this->fs.precision(12);
 
-	this->fs << "camera { orthographic location <0,0,-230> direction <0,0,13> up <0," << ((this->maxlat-this->minlat)*69.71/LAT_WEIGHT) << ",0> right <" << ((this->maxlon-this->minlon)*100/LON_WEIGHT) << ",0,0> look_at <0,0,0> translate <100,0,0> rotate <45,0,0> }" << endl;
+	this->fs << "camera { orthographic location <0,0,-230> direction <0,0,13> up <0," << ((this->maxlat-this->minlat)*70.7/LAT_WEIGHT) << ",0> right <" << ((this->maxlon-this->minlon)*100/LON_WEIGHT) << ",0,0> look_at <0,0,0> translate <100,0,0> rotate <45,0,0> }" << endl;
 	this->fs << "#include \"osm2pov-styles.inc\"" << endl;
 }
 
@@ -133,12 +133,12 @@ void PovWriter::writeCylinder(double x, double y, double radius, double height, 
 	this->fs << "}" << endl;
 }
 
-void PovWriter::writeSprite(double x, double y, const char *sprite_style, size_t sprite_style_number) {
+void PovWriter::writeSprite(double x, double y, const char *sprite_style, size_t sprite_style_number, double scale) {
 	this->fs << "plane { ";
 	this->fs << "z, 0 hollow on clipped_by { box { <0,0,-1>, <1,1,1> } } ";
 	this->fs << "texture { " << sprite_style << sprite_style_number << " } ";
 	this->fs << "translate <-0.5,0,0> ";
-	this->fs << "scale 0.3 ";		//TODO modificable scale
+	this->fs << "scale " << scale << " ";
 	this->fs << "translate <" << (this->convertLonToCoord(x)) << ", 0, " << this->convertLatToCoord(y) << ">";
 	this->fs << "}" << endl;
 }
