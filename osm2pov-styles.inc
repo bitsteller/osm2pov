@@ -16,10 +16,10 @@ sky_sphere { pigment { rgb <0.2, 0.4, 0.9> } }
 #declare footway=texture { pigment { rgb <0.5,0.5,0.5> } finish { phong 1 } }
 #declare path=texture { pigment { rgb <0.6,0.6,0.3> } finish { phong 1 } }
 
-#declare railway=texture { pigment { rgb <0.5,0.5,0.5> } finish { phong 1 } }
+//#declare railway=texture { pigment { rgb <0.5,0.5,0.5> } finish { phong 1 } }
 #declare railway_tram=texture { pigment { rgb <0.5,0.5,0.5> } finish { phong 1 } }
 //#declare railway=texture { pigment { hexagon rgb <0.2,0.2,0.2>, <0.95,0.95,0.95>, rgb <0.95,0.95,0.95> scale 0.2} finish { phong 1 } }
-//#declare railway=texture { pigment { image_map { png "textures/rails-1.png" } scale 0.06 rotate <45,0,0> translate <0,0,235> } finish { phong 1 } }
+#declare railway=texture { pigment { image_map { png "textures/rail-1.png" } scale 0.06 rotate <45,0,0> translate <0,0,235> } finish { phong 1 } }
 //#declare railway_tram=texture { pigment { image_map { png "textures/rails-2.png" } scale 0.03 rotate <45,0,0> translate <0,0,235> } finish { phong 1 } }
 
 #declare man_made_tower=texture { pigment { rgb <0.7,0.4,0.5> } finish { phong 1 } }
