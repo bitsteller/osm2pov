@@ -127,6 +127,7 @@ int main(int argc, const char **argv) {
 	osm2pov_converter.drawWays("highway", "steps", 1.2, 0.03, "footway", true);
 	osm2pov_converter.drawWays("highway", "cycleway", 1.5, 0.03, "footway", true);
 	osm2pov_converter.drawWays("highway", "path", 1, 0.015, "path", true);
+	osm2pov_converter.drawAreas("amenity", "parking", 0.0009, "highway_area");
 
 	osm2pov_converter.drawWays("railway", "rail", 4.5, 0.09, "railway", false);
 	osm2pov_converter.drawWays("railway", "abandoned", 4.5, 0.09, "railway", false);
