@@ -1,3 +1,4 @@
 tree-clipart-*: http://karenswhimsy.com/tree-clipart.shtm, public domain from old postcards
 postbox-clipart-1: http://commons.wikimedia.org/wiki/File:German_letterbox.jpg, CC-BY-SA Schneelocke, Wikipedia
+windpower-1.png: http://commons.wikimedia.org/wiki/File:Windrad_Jackerath.JPG, CC-BY-SA Mikosch, Wikimedia Commons
 rail-1.png - my own :-)

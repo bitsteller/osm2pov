@@ -48,5 +48,6 @@ sky_sphere { pigment { rgb <0.2, 0.4, 0.9> } }
 #declare tree6=texture { pigment { image_map { png "textures/tree-clipart-6-small.png" } } }
 
 #declare postbox1=texture { pigment { image_map { png "textures/postbox-clipart-1.png" } } finish { phong 1 } }
+#declare windpower1=texture { pigment { image_map { png "textures/windpower-1.png" } } finish { phong 1 } }
 
 plane { y,0 texture { ground } }
