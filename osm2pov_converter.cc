@@ -106,6 +106,10 @@ void Osm2PovConverter::drawWays(const char *key, const char *value, double width
 			this->pov_writer->writeComment(s.str().c_str());
 		}
 
+		//overide default width if it is defined in the width tag
+		const char *width_str = (*it)->getAttribute("width");
+		if (width_str != NULL) width = readDimension(width_str);
+
 		this->drawWay((*it)->getNodes(), width, height+extra_layer, style, including_links);
 	}
 }
