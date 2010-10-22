@@ -8,7 +8,7 @@ class Osm2PovConverter {
 	class PovWriter *pov_writer;
 	PointField point_field;
 
-	static double readHeight(const char *height_text);
+	static double readDimension(const char *dimension_text);
 	void drawWay(const vector<const class Node*> *nodes, double width, double height, const char *style, bool including_links);
 	void drawBuilding(class MultiPolygon *multipolygon, double height, const char *style, const char *roof_style);
 	void drawBuildingWalls(const vector<const class XY*> *points, double height, const char *style);

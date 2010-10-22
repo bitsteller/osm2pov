@@ -6,13 +6,26 @@
 #include "pov_writer.h"
 #include "primitives.h"
 
-double Osm2PovConverter::readHeight(const char *height_text) {
-	double height = atof(height_text);			//metres by default
-	if (strlen(height_text) > 3) {
-		if (strcmp(height_text+strlen(height_text)-3," ft") == 0) height *= 0.3048;	//feets
-		else if (strcmp(height_text+strlen(height_text)-3," yd") == 0) height *= 0.9144;	//yards
+/*
+ * Extracts the height or width from a tag value as meters.
+ */
+double Osm2PovConverter::readDimension(const char *dimension_text) {
+	//find the length of the number part of the dimension text
+	char digit_set[] = "1234567890.";
+	int digits_length = strspn(dimension_text, digit_set);
+
+	//extract the digits and convert to a double
+	char digits[digits_length];
+	strncpy(digits, dimension_text, digits_length);
+	double dimension = atof(digits);
+
+	//we assume the units to be meters unless we find information suggesting otherwise
+	if (strlen(dimension_text) > digits_length) {
+		if (strcmp(dimension_text+strlen(dimension_text)-3," ft") == 0) dimension *= 0.3048; //feets
+		else if (strcmp(dimension_text+strlen(dimension_text)-3," yd") == 0) dimension *= 0.9144; //yards
 	}
-	return height;
+
+	return dimension;
 }
 
 void Osm2PovConverter::drawTowers(const char *key, const char *value, double width, double default_height, const char *style) {
@@ -34,7 +47,7 @@ void Osm2PovConverter::drawTowers(const char *key, const char *value, double wid
 
 		double height = default_height;
 		const char *str = (*it)->getAttribute("height");
-		if (str != NULL) height = readHeight(str);
+		if (str != NULL) height = readDimension(str);
 
 		this->pov_writer->writeCylinder(x, y, this->pov_writer->metres2unit(width)/2, this->pov_writer->metres2unit(height), style);
 	}
@@ -309,7 +322,7 @@ void Osm2PovConverter::drawBuildings(const char *key, const char *value, double 
 		if (str != NULL) height = 4 + (atof(str)-1) * 3;
 		str = (*it)->getAttribute("building:height");
 		if (str == NULL) str = (*it)->getAttribute("height");
-		if (str != NULL) height = readHeight(str);
+		if (str != NULL) height = readDimension(str);
 
 		{
 			stringstream s;
