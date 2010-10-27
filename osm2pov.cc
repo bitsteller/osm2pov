@@ -153,7 +153,7 @@ int main(int argc, const char **argv) {
 	osm2pov_converter.drawBuildings("amenity", "tower", 25, "man_made_tower", "building_roof");
 	osm2pov_converter.drawWays("barrier", "wall", 0.3, 3, "wall", true);
 
-	osm2pov_converter.drawObjects("power_source", "wind", "windpower", 1.0, 1, 1);
+	osm2pov_converter.drawObjects("power_source", "wind", "windpower", 1.5, 1, 1);
 	osm2pov_converter.drawObjects("amenity", "post_box", "postbox", 0.1, 1, 1);
 	osm2pov_converter.drawObjects("natural", "tree", "tree", 0.2, 1, 6);
 	osm2pov_converter.drawForests("natural", "wood", 0.00011, "forest", "tree", 1, 1, 6);
