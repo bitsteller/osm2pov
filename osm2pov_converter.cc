@@ -15,9 +15,11 @@ double Osm2PovConverter::readDimension(const char *dimension_text) {
 	int digits_length = strspn(dimension_text, digit_set);
 
 	//extract the digits and convert to a double
-	char digits[digits_length];
+	char digits[digits_length+1];
 	strncpy(digits, dimension_text, digits_length);
+	digits[digits_length] = '\0'; //finish with NULL byte
 	double dimension = atof(digits);
+	cout << dimension << endl; //DEBUG
 
 	//we assume the units to be meters unless we find information suggesting otherwise
 	if (strlen(dimension_text) > digits_length) {
