@@ -10,19 +10,10 @@
  * Extracts the height or width from a tag value as meters.
  */
 double Osm2PovConverter::readDimension(const char *dimension_text) {
-	//find the length of the number part of the dimension text
-	char digit_set[] = "1234567890.";
-	int digits_length = strspn(dimension_text, digit_set);
-
-	//extract the digits and convert to a double
-	char digits[digits_length+1];
-	strncpy(digits, dimension_text, digits_length);
-	digits[digits_length] = '\0'; //finish with NULL byte
-	double dimension = atof(digits);
-	cout << dimension << endl; //DEBUG
+	double dimension = atof(dimension_text);
 
 	//we assume the units to be meters unless we find information suggesting otherwise
-	if (strlen(dimension_text) > digits_length) {
+	if (strlen(dimension_text) > 3) {
 		if (strcmp(dimension_text+strlen(dimension_text)-3," ft") == 0) dimension *= 0.3048; //feets
 		else if (strcmp(dimension_text+strlen(dimension_text)-3," yd") == 0) dimension *= 0.9144; //yards
 	}
