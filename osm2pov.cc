@@ -38,7 +38,7 @@ int main(int argc, const char **argv) {
 
 	cout << "Loading input file" << endl;
 
-	//setting attributes that are ignored when read OSM file. These attributes will not used
+	//setting attributes that are ignored when read OSM file. These attributes will not used (for memory saving)
 	primitives.setIgnoredAttribute("addr:city", NULL);
 	primitives.setIgnoredAttribute("addr:conscriptionnumber", NULL);
 	primitives.setIgnoredAttribute("addr:country", NULL);
@@ -110,7 +110,8 @@ int main(int argc, const char **argv) {
 	osm2pov_converter.drawWaysWithBorder("highway", "motorway", 10, 0.06, "highway", 10, "highway_secondary_border");
 	osm2pov_converter.drawWaysWithBorder("highway", "motorway_link", 5, 0.06, "highway", 10, "highway_border");
 	osm2pov_converter.drawWaysWithBorder("highway", "primary", 8, 0.06, "highway", 10, "highway_secondary_border");
-	osm2pov_converter.drawWaysWithBorder("highway", "trunk", 7, 0.06, "highway", 10, "highway_secondary_border");
+  osm2pov_converter.drawWaysWithBorder("highway", "primary_link", 5, 0.06, "highway", 10, "highway_border");
+  osm2pov_converter.drawWaysWithBorder("highway", "trunk", 7, 0.06, "highway", 10, "highway_secondary_border");
 	osm2pov_converter.drawWaysWithBorder("highway", "trunk_link", 4, 0.06, "highway", 10, "highway_border");
 	osm2pov_converter.drawWaysWithBorder("highway", "secondary", 6, 0.06, "highway", 10, "highway_secondary_border");
 	osm2pov_converter.drawWaysWithBorder("highway", "tertiary", 5.5, 0.06, "highway", 10, "highway_border");
