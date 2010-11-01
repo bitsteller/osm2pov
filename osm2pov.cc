@@ -110,8 +110,8 @@ int main(int argc, const char **argv) {
 	osm2pov_converter.drawWaysWithBorder("highway", "motorway", 10, 0.06, "highway", 10, "highway_secondary_border");
 	osm2pov_converter.drawWaysWithBorder("highway", "motorway_link", 5, 0.06, "highway", 10, "highway_border");
 	osm2pov_converter.drawWaysWithBorder("highway", "primary", 8, 0.06, "highway", 10, "highway_secondary_border");
-  osm2pov_converter.drawWaysWithBorder("highway", "primary_link", 5, 0.06, "highway", 10, "highway_border");
-  osm2pov_converter.drawWaysWithBorder("highway", "trunk", 7, 0.06, "highway", 10, "highway_secondary_border");
+	osm2pov_converter.drawWaysWithBorder("highway", "primary_link", 5, 0.06, "highway", 10, "highway_border");
+	osm2pov_converter.drawWaysWithBorder("highway", "trunk", 7, 0.06, "highway", 10, "highway_secondary_border");
 	osm2pov_converter.drawWaysWithBorder("highway", "trunk_link", 4, 0.06, "highway", 10, "highway_border");
 	osm2pov_converter.drawWaysWithBorder("highway", "secondary", 6, 0.06, "highway", 10, "highway_secondary_border");
 	osm2pov_converter.drawWaysWithBorder("highway", "tertiary", 5.5, 0.06, "highway", 10, "highway_border");
