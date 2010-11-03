@@ -89,14 +89,12 @@ void Osm2PovConverter::drawWays(const char *key, const char *value, double width
 		}
 		const char *extra_layer_str = (*it)->getAttribute("layer");
 		double extra_layer = (extra_layer_str == NULL ? 0 : atof(extra_layer_str)/500);
-		if (extra_layer < 0) extra_layer = 0;//!
+		if (extra_layer < 0) extra_layer = 0;
 		
 		//overide default width if it is defined in the width tag
 		double real_width = width;
-		if ((*it)->hasAttribute("width", NULL)) {
-			const char *width_str = (*it)->getAttribute("width");
-			real_width = readDimension(width_str);
-		}
+		const char *width_str = (*it)->getAttribute("width");
+		if (width_str != NULL) real_width = readDimension(width_str);//!
 		
 		{
 			stringstream s;
