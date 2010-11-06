@@ -89,7 +89,7 @@ void Osm2PovConverter::drawWays(const char *key, const char *value, double width
 		}
 		const char *extra_layer_str = (*it)->getAttribute("layer");
 		double extra_layer = (extra_layer_str == NULL ? 0 : atof(extra_layer_str)/500);
-		if (extra_layer < 0) extra_layer = 0;
+		if (extra_layer < 0) extra_layer = 0;//!
 		
 		//overide default width if it is defined in the width tag
 		double real_width = width;
@@ -127,16 +127,21 @@ void Osm2PovConverter::drawWaysWithBorder(const char *key, const char *value, do
 		double extra_layer = (extra_layer_str == NULL ? 0 : atof(extra_layer_str)/500);
 		if ((*it)->hasAttribute("tunnel", "yes")) height /= 2;	//!
 		if (extra_layer < 0) extra_layer = 0;//!
+		
+		//overide default width if it is defined in the width tag
+		double real_width = width;
+		const char *width_str = (*it)->getAttribute("width");
+		if (width_str != NULL) real_width = readDimension(width_str);//!
 
 		{
 			stringstream s;
 			s << "Way " << (*it)->getId() << " with border (tag " << key;
 			if (value != NULL) s << "=" << value;
-			s << ")";
+			s << ", width: " << real_width << "m" << ")";
 			this->pov_writer->writeComment(s.str().c_str());
 		}
-		drawWay((*it)->getNodes(), width, height-0.0011+extra_layer, border_style, true);
-		drawWay((*it)->getNodes(), width-border_width_percent*width/100*2, height+extra_layer, (*it)->hasAttribute("tunnel", "yes") && strcmp(style, "highway") == 0 ? "highway_tunnel" : style, true);
+		drawWay((*it)->getNodes(), real_width, height-0.0011+extra_layer, border_style, true);
+		drawWay((*it)->getNodes(), real_width-border_width_percent*real_width/100*2, height+extra_layer, (*it)->hasAttribute("tunnel", "yes") && strcmp(style, "highway") == 0 ? "highway_tunnel" : style, true);
 	}
 }
 
