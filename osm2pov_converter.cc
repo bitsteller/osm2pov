@@ -89,7 +89,7 @@ void Osm2PovConverter::drawWays(const char *key, const char *value, double width
 		}
 		const char *extra_layer_str = (*it)->getAttribute("layer");
 		double extra_layer = (extra_layer_str == NULL ? 0 : atof(extra_layer_str)/500);
-		if (extra_layer < 0) extra_layer = 0;//!
+		if (extra_layer < 0) continue; //skip objects under the ground
 		
 		//overide default width if it is defined in the width tag
 		double real_width = width;
@@ -126,7 +126,7 @@ void Osm2PovConverter::drawWaysWithBorder(const char *key, const char *value, do
 		const char *extra_layer_str = (*it)->getAttribute("layer");
 		double extra_layer = (extra_layer_str == NULL ? 0 : atof(extra_layer_str)/500);
 		if ((*it)->hasAttribute("tunnel", "yes")) height /= 2;	//!
-		if (extra_layer < 0) extra_layer = 0;//!
+		if (extra_layer < 0) continue; //skip objects under the ground
 		
 		//overide default width if it is defined in the width tag
 		double real_width = width;
@@ -167,7 +167,7 @@ void Osm2PovConverter::drawAreas(const char *key, const char *value, double heig
 	for (list<MultiPolygon*>::iterator it = multipolygons.begin(); it != multipolygons.end(); it++) {
 		const char *extra_layer_str = (*it)->getAttribute("layer");
 		double extra_layer = (extra_layer_str == NULL ? 0 : atof(extra_layer_str)/500);
-		if (extra_layer < 0) extra_layer = 0;//!
+		if (extra_layer < 0) continue; //skip objects under the ground
 
 		{
 			stringstream s;
@@ -187,7 +187,7 @@ void Osm2PovConverter::drawForests(const char *key, const char *value, double fl
 	for (list<MultiPolygon*>::iterator it = multipolygons.begin(); it != multipolygons.end(); it++) {
 		const char *extra_layer_str = (*it)->getAttribute("layer");
 		double extra_layer = (extra_layer_str == NULL ? 0 : atof(extra_layer_str)/500);
-		if (extra_layer < 0) extra_layer = 0;//!
+		if (extra_layer < 0) continue; //skip objects under the ground
 
 		{
 			stringstream s;
@@ -314,7 +314,7 @@ void Osm2PovConverter::drawBuildings(const char *key, const char *value, double 
 		const char *str;
 		str = (*it)->getAttribute("layer");
 		double extra_layer = (str == NULL ? 0 : atof(str)/500);
-		if (extra_layer < 0) extra_layer = 0;//!
+		if (extra_layer < 0) continue; //skip objects under the ground
 
 		double height = default_height;
 		const char *roof_style = roof_style_default;
