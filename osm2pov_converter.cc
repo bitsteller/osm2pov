@@ -320,7 +320,7 @@ void Osm2PovConverter::drawBuildings(const char *key, const char *value, double 
 		const char *roof_style = roof_style_default;
 		if ((*it)->hasAttribute("amenity", "place_of_worship")) {
 			height *= 2;
-			roof_style = roof_style_religious;
+			if (roof_style_religious != NULL) roof_style = roof_style_religious;
 		}
 		str = (*it)->getAttribute("building:levels");
 		if (str != NULL) height = 4 + (atof(str)-1) * 3;
