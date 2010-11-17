@@ -51,12 +51,29 @@ void PovWriter::writeComment(const char *comment) {
 	this->fs << " // " << comment << endl;
 }
 
-void PovWriter::writeTriangle(const Triangle *triangle, double height, const char *style) {
-	this->fs << "triangle { ";
+void PovWriter::writeTriangle(uint64_t id, const Triangle *triangle, double height, const char *style) {
+	double x[3], y[3];
+	for (size_t i = 0; i < 3; i++) {
+		x[i] = this->convertLonToCoord(triangle->getX(i));
+		y[i] = this->convertLatToCoord(triangle->getY(i));
+	}
+
+	//check if 2 points aren't the same (it's when some points are the same but no side-by-side (this is checked previously))
+	//in that cases Pov-Ray takes it as infinite objects and warn
 
 	for (size_t i = 0; i < 3; i++) {
-		this->fs << (i == 0 ? "<" : ",<") << this->convertLonToCoord(triangle->getX(i)) << "," << this->metres2unit(height) << "," << this->convertLatToCoord(triangle->getY(i)) << ">";
+        if (x[i] <= x[(i+1)%3]+COMP_PRECISION && x[i] >= x[(i+1)%3]-COMP_PRECISION
+         && y[i] <= y[(i+1)%3]+COMP_PRECISION && y[i] >= y[(i+1)%3]-COMP_PRECISION) {
+            cerr << "Skipping triangle in area with id " << id << "." << endl;
+            return;
+        }
 	}
+
+    this->fs << "triangle { ";
+
+    for (size_t i = 0; i < 3; i++) {
+        this->fs << (i == 0 ? "<" : ",<") << x[i] << "," << this->metres2unit(height) << "," << y[i] << ">";
+    }
 
 	this->fs << " texture { " << style << " } ";
 	this->fs << "}" << endl;
@@ -68,14 +85,16 @@ void PovWriter::writePolygon(MultiPolygon *polygon, double height, const char *s
 			//now, all polygons are decomponed into triangles. It's most causes faster rendering
 	if (polygon->getPointsCount() > 1) {
 		const vector<const Triangle*> *triangles = polygon->getPolygonTriangles();
+		const uint64_t id = polygon->getId();
 		for (vector<const Triangle*>::const_iterator it = triangles->begin(); it != triangles->end(); it++) {
-			this->writeTriangle(*it, height, style);
+			this->writeTriangle(id, *it, height, style);
 		}
 		return;
 	}
 
-	// !! this isn't never used (because polygon count is always > 1)
+	// !! this is never used (because polygon count is always > 1)
 	//next code is only when you (for any reason) want write polygon as polygon primitive, not set of triangles
+	assert(false);         //remove if needn't
 
 	this->fs << "polygon { ";
 	this->fs << polygon->getPointsCount() << " ";

@@ -18,7 +18,10 @@ bool Polygon3D::addPart(uint64_t area_id, vector<double> &coords) {
 
 	bool at_least_two_same_points = false;
 	for (size_t i = 0; i < coords.size(); i += 3) {
-		if (i > 0 && coords[i] == coords[i-3] && coords[i+1] == coords[i+1-3] && coords[i+2] == coords[i+2-3]) {
+		if (i > 0
+		 && coords[i] <= coords[i-3]+COMP_PRECISION && coords[i] >= coords[i-3]-COMP_PRECISION
+		 && coords[i+1] <= coords[i+1-3]+COMP_PRECISION && coords[i+1] >= coords[i+1-3]-COMP_PRECISION
+		 && coords[i+2] <= coords[i+2-3]+COMP_PRECISION && coords[i+2] >= coords[i+2-3]-COMP_PRECISION) {
 			at_least_two_same_points = true;
 			continue;		//two same points
 		}

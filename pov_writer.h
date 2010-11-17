@@ -18,7 +18,7 @@ class PovWriter {
 		return this->fs;
 	}
 	void writeComment(const char *comment);
-	void writeTriangle(const Triangle *triangle, double height, const char *style);
+	void writeTriangle(uint64_t id, const Triangle *triangle, double height, const char *style);
 	void writePolygon(MultiPolygon *polygon, double height, const char *style);
 	void writePolygon(const Polygon3D *polygon, const char *style);
 	void writeBox(double x, double y, double width, double height, double length, double angle, const char *style);
