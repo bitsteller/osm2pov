@@ -23,12 +23,19 @@ Primitives::~Primitives() {
 	}
 }
 
+void Primitives::setInterestRectByViewRect() {
+    this->interest_rect = this->view_rect;
+    this->interest_rect.enlargeByPercent(5);
+}
+
 void Primitives::setBoundsByXY(size_t tile_x, size_t tile_y) {
 	this->bounds_set_by_x_y = true;
-	this->minlat = this->halftiley2lat(tile_y+1, 12);
-	this->maxlat = this->halftiley2lat(tile_y, 12);
-	this->minlon = this->tilex2lon(tile_x, 12);
-	this->maxlon = this->tilex2lon(tile_x+1, 12);
+	this->view_rect.minlat = this->halftiley2lat(tile_y+1, 12);
+	this->view_rect.maxlat = this->halftiley2lat(tile_y, 12);
+	this->view_rect.minlon = this->tilex2lon(tile_x, 12);
+	this->view_rect.maxlon = this->tilex2lon(tile_x+1, 12);
+
+	this->setInterestRectByViewRect();
 }
 
 void Primitives::setIgnoredAttribute(const char *key, const char *value) {
@@ -61,11 +68,13 @@ void Primitives::setExistingAttribute(const char *key, const char *value) {
 }
 
 void Primitives::setBounds(double minlat, double minlon, double maxlat, double maxlon) {
-	this->minlat = minlat;
-	this->minlon = minlon;
-	this->maxlat = maxlat;
-	this->maxlon = maxlon;
+	this->view_rect.minlat = minlat;
+	this->view_rect.minlon = minlon;
+	this->view_rect.maxlat = maxlat;
+	this->view_rect.maxlon = maxlon;
 	this->bounds_set = true;
+
+    this->setInterestRectByViewRect();
 }
 
 void Primitives::getNodesWithAttribute(list<const Node*> *output, const char *key, const char *value) {
@@ -98,7 +107,7 @@ void Primitives::getMultiPolygonsWithAttribute(list<MultiPolygon*> *output, cons
 	for (unordered_map<uint64_t,Relation*>::const_iterator it = this->relations.begin(); it != this->relations.end(); it++) {
 		const char *value_now = it->second->getAttribute(key);
 		if (value_now != NULL && (value == NULL || strcmp(value, value_now) == 0)) {
-			MultiPolygon *multipolygon = new MultiPolygon(it->second);
+			MultiPolygon *multipolygon = new MultiPolygon(it->second, &this->interest_rect);
 			const vector<const PrimitiveRole*> *members = it->second->getRelationMembers();
 
 			for (vector<const PrimitiveRole*>::const_iterator it2 = members->begin(); it2 != members->end(); it2++) {
@@ -117,10 +126,14 @@ void Primitives::getMultiPolygonsWithAttribute(list<MultiPolygon*> *output, cons
 				}
 			}
 
-			if (!multipolygon->hasAnyOuterPart()) cerr << "Relation with id " << it->second->getId() << " hasn't any \"outer\" element, ignoring." << endl;
+			if (!multipolygon->hasAnyOuterPart()) {
+				cerr << "Relation with id " << it->second->getId() << " hasn't any \"outer\" element, ignoring." << endl;
+				delete multipolygon;
+			}
 			else {
 				multipolygon->setDone();
 				if (multipolygon->isValid()) output->push_back(multipolygon);
+				else delete multipolygon;
 			}
 		}
 	}
@@ -133,7 +146,7 @@ void Primitives::getMultiPolygonsWithAttribute(list<MultiPolygon*> *output, cons
 				const char *role = (*it2)->getRoleForId(it->second->getId());
 				if (strcmp(role, "outer") == 0) {
 					if (ids_used_in_relations.find(it->second->getId()) == ids_used_in_relations.end()) {		//isn't used in relation already
-						MultiPolygon *multipolygon = new MultiPolygon(*it2);
+						MultiPolygon *multipolygon = new MultiPolygon(*it2, &this->interest_rect);
 						const vector<const PrimitiveRole*> *members = (*it2)->getRelationMembers();
 						for (vector<const PrimitiveRole*>::const_iterator it3 = members->begin(); it3 != members->end(); it3++) {
 							if ((*it3)->role == "outer") {		//exist more outer ways for this polygon
@@ -153,6 +166,7 @@ void Primitives::getMultiPolygonsWithAttribute(list<MultiPolygon*> *output, cons
 						}
 						multipolygon->setDone();
 						if (multipolygon->isValid()) output->push_back(multipolygon);
+						else delete multipolygon;
 						goto NEXT_WAY;
 					}
 				}
@@ -168,7 +182,7 @@ void Primitives::getMultiPolygonsWithAttribute(list<MultiPolygon*> *output, cons
 */			}
 
 			//isn't in any relation, so add as common way
-			MultiPolygon *multipolygon = new MultiPolygon(NULL);
+			MultiPolygon *multipolygon = new MultiPolygon(NULL, &this->interest_rect);
 			multipolygon->addOuterPart(it->second);
 			multipolygon->setDone();
 			if (multipolygon->isValid()) output->push_back(multipolygon);
@@ -440,26 +454,28 @@ bool Primitives::loadFromXml(const char *filename) {
 	fclose(fp);
 
 	if (!this->isBoundsSet()) {			//bounds are not set, so get it from data
-		this->minlat = 10000;			//some nonsens
-		this->maxlat = -10000;
-		this->minlon = 10000;
-		this->maxlon = -10000;
+		this->view_rect.minlat = 10000;			//some nonsens
+		this->view_rect.maxlat = -10000;
+		this->view_rect.minlon = 10000;
+		this->view_rect.maxlon = -10000;
 
 		for (unordered_map<uint64_t,Node*>::const_iterator it = this->nodes.begin(); it != this->nodes.end(); it++) {
 			const float lat = it->second->getLat(), lon = it->second->getLon();
-			if (lat < this->minlat) this->minlat = lat;
-			if (lat > this->maxlat) this->maxlat = lat;
-			if (lon < this->minlon) this->minlon = lon;
-			if (lon > this->maxlon) this->maxlon = lon;
+			if (lat < this->view_rect.minlat) this->view_rect.minlat = lat;
+			if (lat > this->view_rect.maxlat) this->view_rect.maxlat = lat;
+			if (lon < this->view_rect.minlon) this->view_rect.minlon = lon;
+			if (lon > this->view_rect.maxlon) this->view_rect.maxlon = lon;
 		}
 
-		if (this->minlat >= this->maxlat || this->minlon >= this->maxlon) {
+		if (this->view_rect.minlat >= this->view_rect.maxlat || this->view_rect.minlon >= this->view_rect.maxlon) {
 			cerr << "Error while computing area bounds." << endl;
 			return false;
 		}
+
+		this->setInterestRectByViewRect();
 	}
 
-	cout << "Area: LAT " << this->minlat << " - " << this->maxlat << ", LON " << this->minlon << " - " << this->maxlon << endl;
+	cout << "Area: LAT " << this->view_rect.minlat << " - " << this->view_rect.maxlat << ", LON " << this->view_rect.minlon << " - " << this->view_rect.maxlon << endl;
 	cout << "Nodes: " << this->nodes.size() << " Ways: " << this->ways.size() << " Relations: " << this->relations.size() << endl;
 
 	return success;

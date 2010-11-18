@@ -7,6 +7,23 @@
  #define M_PI 3.14159265358979323846
 #endif
 
+struct Rect {
+	double minlat;
+	double minlon;
+	double maxlat;
+	double maxlon;
+
+	void enlargeByPercent(double percent) {		//enlarge region to all directions by x percent
+		double lat_diff = this->maxlat-this->minlat;
+		this->minlat -= lat_diff * percent/100;
+		this->maxlat += lat_diff * percent/100;
+
+		double lon_diff = this->maxlon-this->minlon;
+		this->minlon -= lon_diff * percent/100;
+		this->maxlon += lon_diff * percent/100;
+	}
+};
+
 class Primitive {
 	private:
 	uint64_t id;
@@ -104,7 +121,8 @@ class Primitives {
 	private:
 	bool bounds_set_by_x_y;
 	bool bounds_set;
-	double minlat, minlon, maxlat, maxlon;
+	Rect view_rect;
+	Rect interest_rect;
 	unordered_map<uint64_t,Node*> nodes;
 	unordered_map<uint64_t,Way*> ways;
 	unordered_map<uint64_t,Relation*> relations;
@@ -129,6 +147,8 @@ class Primitives {
 		return (ceil(tile_coord) - tile_coord);
 	}
 
+	void setInterestRectByViewRect();
+
 	public:
 	Primitives();
 	~Primitives();
@@ -140,10 +160,7 @@ class Primitives {
 	void setExistingAttribute(const char *key, const char *value);
 	bool loadFromXml(const char *filename);
 	bool isBoundsSet() const { return (this->bounds_set || this->bounds_set_by_x_y); }
-	double getMinLat() const { return this->minlat; }
-	double getMinLon() const { return this->minlon; }
-	double getMaxLat() const { return this->maxlat; }
-	double getMaxLon() const { return this->maxlon; }
+	Rect getViewRect() const { return this->view_rect; }
 	void setBounds(double minlat, double minlon, double maxlat, double maxlon);
 	void addNode(uint64_t id, Node *node) {
 		this->nodes[id] = node;
@@ -166,7 +183,7 @@ class Primitives {
 	}
 	void getNodesWithAttribute(list<const Node*> *output, const char *key, const char *value);
 	void getWaysWithAttribute(list<const Way*> *output, const char *key, const char *value);
-	void getMultiPolygonsWithAttribute(list<MultiPolygon*> *output, const char *key, const char *value);
+	void getMultiPolygonsWithAttribute(list<class MultiPolygon*> *output, const char *key, const char *value);
 	void getDisusedAttributes(multimap<size_t,string> *output) const;
 };
 

@@ -23,6 +23,7 @@ class Way;
 struct XY {
 	XY() { }
 	XY(double x, double y) : x(x), y(y) { }
+	XY(const XY *xy) : x(xy->x), y(xy->y) { }
 	double x, y;
 };
 
@@ -46,6 +47,8 @@ struct PointFieldItem {
 	size_t item_type;
 };
 
+void ComputeRegularInsidePoints(const vector<Triangle> *triangles, vector<PointFieldItem*> *output_objects, class PointField *point_field, size_t tree_style_min, size_t tree_style_max);
+
 class MultiPolygon {
 	private:
 	bool is_valid;
@@ -53,13 +56,11 @@ class MultiPolygon {
 	list<vector<const XY*> > outer_parts;
 	list<const Way*> outer_ways;
 	list<vector<const XY*> > holes;
-	vector<const Triangle*> triangles;
 	const class Relation *relation;  //NULL if isn't in any relation
-
-	void convertToTriangles(vector<const Triangle*> *triangles) const;
+	const class Rect *interest_rect;
 
 	public:
-	MultiPolygon(const Relation *relation);
+	MultiPolygon(const Relation *relation, const Rect *interest_rect);
 	~MultiPolygon();
 	bool isValid() const { assert(this->is_done); return this->is_valid; }
 	bool isDone() const { return this->is_valid; }
@@ -73,9 +74,7 @@ class MultiPolygon {
 	bool hasAttribute(const char *key, const char *value) const;
 	uint64_t getId() const;
 	size_t getPointsCount() const;
-	bool isPointInsidePolygon(const vector<const Triangle*> *triangles, const XY *xy) const;
-	const vector<const Triangle*> *getPolygonTriangles();
-	void computeRegularInsidePoints(vector<PointFieldItem*> *objects, class PointField *point_field, size_t tree_style_min, size_t tree_style_max);
+	void convertToTriangles(vector<Triangle> *triangles) const;
 };
 
 #endif /* OUTPUT_POLYGON_H_ */
