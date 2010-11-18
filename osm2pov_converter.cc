@@ -317,8 +317,7 @@ void Osm2PovConverter::drawBuildings(const char *key, const char *value, double 
 		if (extra_layer < 0) continue; //skip objects under the ground
 		
 		//skip buildings already rendered by drawTowers()
-		if ((*it)->hasAttribute("man_made", "tower")) continue; 
-		if ((*it)->hasAttribute("amenity", "tower")) continue;
+		if ((*it)->hasAttribute("man_made", "tower") and strcmp(key, "building") == 0) continue; 
 
 		double height = default_height;
 		const char *roof_style = roof_style_default;
