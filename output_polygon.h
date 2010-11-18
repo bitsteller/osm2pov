@@ -47,7 +47,7 @@ struct PointFieldItem {
 	size_t item_type;
 };
 
-void ComputeRegularInsidePoints(const vector<const Triangle*> *triangles, vector<PointFieldItem*> *output_objects, class PointField *point_field, size_t tree_style_min, size_t tree_style_max);
+void ComputeRegularInsidePoints(const vector<Triangle> *triangles, vector<PointFieldItem*> *output_objects, class PointField *point_field, size_t tree_style_min, size_t tree_style_max);
 
 class MultiPolygon {
 	private:
@@ -74,7 +74,7 @@ class MultiPolygon {
 	bool hasAttribute(const char *key, const char *value) const;
 	uint64_t getId() const;
 	size_t getPointsCount() const;
-	void convertToTriangles(vector<const Triangle*> *triangles) const;
+	void convertToTriangles(vector<Triangle> *triangles) const;
 };
 
 #endif /* OUTPUT_POLYGON_H_ */

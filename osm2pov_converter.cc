@@ -176,14 +176,11 @@ void Osm2PovConverter::drawAreas(const char *key, const char *value, double heig
 			s << ")";
 			this->pov_writer->writeComment(s.str().c_str());
 		}
-		{
-			vector<const Triangle*> triangles;
-			(*it)->convertToTriangles(&triangles);
-			this->pov_writer->writePolygon((*it)->getId(), &triangles, height+extra_layer, style);
 
-			for (vector<const Triangle*>::iterator it2 = triangles.begin(); it2 != triangles.end(); it2++)
-				delete *it2;
-		}
+		vector<Triangle> triangles;
+		(*it)->convertToTriangles(&triangles);
+		this->pov_writer->writePolygon((*it)->getId(), &triangles, height+extra_layer, style);
+
 		delete *it;
 	}
 }
@@ -204,7 +201,7 @@ void Osm2PovConverter::drawForests(const char *key, const char *value, double fl
 			pov_writer->writeComment(s.str().c_str());
 		}
 
-		vector<const Triangle*> triangles;
+		vector<Triangle> triangles;
 		(*it)->convertToTriangles(&triangles);
 		this->pov_writer->writePolygon((*it)->getId(), &triangles, floor_height+extra_layer, floor_style);
 		{
@@ -231,8 +228,6 @@ void Osm2PovConverter::drawForests(const char *key, const char *value, double fl
 			delete (*it2)->xy;
 			delete *it2;
 		}
-        for (vector<const Triangle*>::iterator it2 = triangles.begin(); it2 != triangles.end(); it2++)
-        	delete *it2;
 
 		delete *it;
 	}
@@ -317,11 +312,9 @@ void Osm2PovConverter::drawBuilding(MultiPolygon *multipolygon, double height, c
 	}
 
 			//roof
-	vector<const Triangle*> triangles;
+	vector<Triangle> triangles;
 	multipolygon->convertToTriangles(&triangles);
 	this->pov_writer->writePolygon(multipolygon->getId(), &triangles, height, roof_style);
-    for (vector<const Triangle*>::iterator it2 = triangles.begin(); it2 != triangles.end(); it2++)
-    	delete *it2;
 }
 
 void Osm2PovConverter::drawBuildings(const char *key, const char *value, double default_height, const char *style, const char *roof_style_default, const char *roof_style_religious) {

@@ -77,9 +77,9 @@ void PovWriter::writeTriangle(uint64_t id, const Triangle *triangle, double heig
 }
 
 //When all polygons are decomposed into triangles. It is in most cases faster rendering
-void PovWriter::writePolygon(uint64_t id, const vector<const Triangle*> *triangles, double height, const char *style) {
-	for (vector<const Triangle*>::const_iterator it = triangles->begin(); it != triangles->end(); it++) {
-		this->writeTriangle(id, *it, height, style);
+void PovWriter::writePolygon(uint64_t id, const vector<Triangle> *triangles, double height, const char *style) {
+	for (vector<Triangle>::const_iterator it = triangles->begin(); it != triangles->end(); it++) {
+		this->writeTriangle(id, &(*it), height, style);
 	}
 }
 

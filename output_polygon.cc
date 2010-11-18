@@ -402,9 +402,9 @@ bool IsPointInTriangle(const XY *point, const XY *tr_point1, const XY *tr_point2
 	return true;
 }
 
-bool IsPointInsidePolygon(const vector<const Triangle*> *triangles, const XY *point) {
-	for (vector<const Triangle*>::const_iterator it = triangles->begin(); it != triangles->end(); it++) {
-		if (IsPointInTriangle(point, (*it)->getXY(0), (*it)->getXY(1), (*it)->getXY(2))) {
+bool IsPointInsidePolygon(const vector<Triangle> *triangles, const XY *point) {
+	for (vector<Triangle>::const_iterator it = triangles->begin(); it != triangles->end(); it++) {
+		if (IsPointInTriangle(point, it->getXY(0), it->getXY(1), it->getXY(2))) {
 			return true;
 		}
 	}
@@ -413,19 +413,19 @@ bool IsPointInsidePolygon(const vector<const Triangle*> *triangles, const XY *po
 
 //Function returns set of points inside of multipolygon
 // This function is VERY slow (and bad) - try it on big forest and speed it up!
-void ComputeRegularInsidePoints(const vector<const Triangle*> *triangles, vector<PointFieldItem*> *output_objects, PointField *point_field, size_t tree_style_min, size_t tree_style_max) {
+void ComputeRegularInsidePoints(const vector<Triangle> *triangles, vector<PointFieldItem*> *output_objects, PointField *point_field, size_t tree_style_min, size_t tree_style_max) {
 	assert(tree_style_min <= tree_style_max);
 
 	if (triangles->empty()) return;
 
 								//determining area of interest from outer polygon
 	double minlat = 1000, minlon = 1000, maxlat = -1000, maxlon = -1000;
-	for (vector<const Triangle*>::const_iterator it = triangles->begin(); it != triangles->end(); it++) {
+	for (vector<Triangle>::const_iterator it = triangles->begin(); it != triangles->end(); it++) {
 		for (size_t i = 0; i < 3; i++) {
-			if ((*it)->points[i]->x < minlon) minlon = (*it)->points[i]->x;
-			if ((*it)->points[i]->x > maxlon) maxlon = (*it)->points[i]->x;
-			if ((*it)->points[i]->y < minlat) minlat = (*it)->points[i]->y;
-			if ((*it)->points[i]->y > maxlat) maxlat = (*it)->points[i]->y;
+			if (it->points[i]->x < minlon) minlon = it->points[i]->x;
+			if (it->points[i]->x > maxlon) maxlon = it->points[i]->x;
+			if (it->points[i]->y < minlat) minlat = it->points[i]->y;
+			if (it->points[i]->y > maxlat) maxlat = it->points[i]->y;
 		}
 	}
 
@@ -475,7 +475,7 @@ void ComputeRegularInsidePoints(const vector<const Triangle*> *triangles, vector
 	delete[] occuped;
 }
 
-void MultiPolygon::convertToTriangles(vector<const Triangle*> *triangles) const {
+void MultiPolygon::convertToTriangles(vector<Triangle> *triangles) const {
 	// At first, I sort nodes by X coord
 	Point *points;
 	{
@@ -572,7 +572,7 @@ void MultiPolygon::convertToTriangles(vector<const Triangle*> *triangles) const 
 			//check if don't lie in line - if not, add to triangles
 			if (left_node->x == node->x && right_node->x == node->x);
 			else if ((left_node->y - node->y)/(left_node->x - node->x) == (right_node->y - node->y)/(right_node->x - node->x));
-			else triangles->push_back(new Triangle(left_node, node, right_node));
+			else triangles->push_back(Triangle(left_node, node, right_node));
 
 			// now, remove triangle from polygon
 
