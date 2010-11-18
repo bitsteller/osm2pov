@@ -5,26 +5,23 @@
 #include "primitives.h"
 
 
-PovWriter::PovWriter(const char *filename, double minlat, double minlon, double maxlat, double maxlon, bool fix_size_to_square) {
-	this->minlat = minlat;
-	this->minlon = minlon;
-	this->maxlat = maxlat;
-	this->maxlon = maxlon;
+PovWriter::PovWriter(const char *filename, const Rect &view_rect, bool fix_size_to_square) {
+	this->view_rect = view_rect;
 
 	if (fix_size_to_square) {			//fix coords to make area square
-		const double weighted_lat_diff = (this->maxlat - this->minlat)/LAT_WEIGHT;
-		const double weighted_lon_diff = (this->maxlon - this->minlon)/LON_WEIGHT;
+		const double weighted_lat_diff = (this->view_rect.maxlat - this->view_rect.minlat)/LAT_WEIGHT;
+		const double weighted_lon_diff = (this->view_rect.maxlon - this->view_rect.minlon)/LON_WEIGHT;
 		if (weighted_lat_diff > weighted_lon_diff) {
-			const double lon_center = (this->minlon + this->maxlon)/2;
-			const double new_diff_to_center = (lon_center-this->minlon)*(weighted_lat_diff/weighted_lon_diff);
-			this->minlon = lon_center - new_diff_to_center;
-			this->maxlon = lon_center + new_diff_to_center;
+			const double lon_center = (this->view_rect.minlon + this->view_rect.maxlon)/2;
+			const double new_diff_to_center = (lon_center-this->view_rect.minlon)*(weighted_lat_diff/weighted_lon_diff);
+			this->view_rect.minlon = lon_center - new_diff_to_center;
+			this->view_rect.maxlon = lon_center + new_diff_to_center;
 		}
 		else {
-			const double lat_center = (this->minlat + this->maxlat)/2;
-			const double new_diff_to_center = (lat_center-this->minlat)*(weighted_lon_diff/weighted_lat_diff);
-			this->minlat = lat_center - new_diff_to_center;
-			this->maxlat = lat_center + new_diff_to_center;
+			const double lat_center = (this->view_rect.minlat + this->view_rect.maxlat)/2;
+			const double new_diff_to_center = (lat_center-this->view_rect.minlat)*(weighted_lon_diff/weighted_lat_diff);
+			this->view_rect.minlat = lat_center - new_diff_to_center;
+			this->view_rect.maxlat = lat_center + new_diff_to_center;
 		}
 	}
 
@@ -36,7 +33,7 @@ PovWriter::PovWriter(const char *filename, double minlat, double minlon, double 
 
 	this->fs.precision(12);
 
-	this->fs << "camera { orthographic location <0,0,-230> direction <0,0,13> up <0," << ((this->maxlat-this->minlat)*70.7/LAT_WEIGHT) << ",0> right <" << ((this->maxlon-this->minlon)*100/LON_WEIGHT) << ",0,0> look_at <0,0,0> translate <100,0,0> rotate <45,0,0> }" << endl;
+	this->fs << "camera { orthographic location <0,0,-230> direction <0,0,13> up <0," << ((this->view_rect.maxlat-this->view_rect.minlat)*70.7/LAT_WEIGHT) << ",0> right <" << ((this->view_rect.maxlon-this->view_rect.minlon)*100/LON_WEIGHT) << ",0,0> look_at <0,0,0> translate <100,0,0> rotate <45,0,0> }" << endl;
 	this->fs << "#include \"osm2pov-styles.inc\"" << endl;
 }
 
@@ -62,39 +59,34 @@ void PovWriter::writeTriangle(uint64_t id, const Triangle *triangle, double heig
 	//in that cases Pov-Ray takes it as infinite objects and warn
 
 	for (size_t i = 0; i < 3; i++) {
-        if (x[i] <= x[(i+1)%3]+COMP_PRECISION && x[i] >= x[(i+1)%3]-COMP_PRECISION
-         && y[i] <= y[(i+1)%3]+COMP_PRECISION && y[i] >= y[(i+1)%3]-COMP_PRECISION) {
-            cerr << "Skipping triangle in area with id " << id << "." << endl;
-            return;
-        }
+		if (x[i] <= x[(i+1)%3]+COMP_PRECISION && x[i] >= x[(i+1)%3]-COMP_PRECISION
+		 && y[i] <= y[(i+1)%3]+COMP_PRECISION && y[i] >= y[(i+1)%3]-COMP_PRECISION) {
+			cerr << "Skipping triangle in area with id " << id << "." << endl;
+			return;
+		}
 	}
 
-    this->fs << "triangle { ";
+	this->fs << "triangle { ";
 
-    for (size_t i = 0; i < 3; i++) {
-        this->fs << (i == 0 ? "<" : ",<") << x[i] << "," << this->metres2unit(height) << "," << y[i] << ">";
-    }
+	for (size_t i = 0; i < 3; i++) {
+		this->fs << (i == 0 ? "<" : ",<") << x[i] << "," << this->metres2unit(height) << "," << y[i] << ">";
+	}
 
 	this->fs << " texture { " << style << " } ";
 	this->fs << "}" << endl;
 }
 
+//When all polygons are decomposed into triangles. It is in most cases faster rendering
+void PovWriter::writePolygon(uint64_t id, const vector<const Triangle*> *triangles, double height, const char *style) {
+	for (vector<const Triangle*>::const_iterator it = triangles->begin(); it != triangles->end(); it++) {
+		this->writeTriangle(id, *it, height, style);
+	}
+}
+
+// !! this is never used (because polygon count is always > 1)
+//next code is only when you (for any reason) want write polygon as polygon primitive, not set of triangles
 void PovWriter::writePolygon(MultiPolygon *polygon, double height, const char *style) {
 	assert(polygon->isValid());
-
-			//now, all polygons are decomponed into triangles. It's most causes faster rendering
-	if (polygon->getPointsCount() > 1) {
-		const vector<const Triangle*> *triangles = polygon->getPolygonTriangles();
-		const uint64_t id = polygon->getId();
-		for (vector<const Triangle*>::const_iterator it = triangles->begin(); it != triangles->end(); it++) {
-			this->writeTriangle(id, *it, height, style);
-		}
-		return;
-	}
-
-	// !! this is never used (because polygon count is always > 1)
-	//next code is only when you (for any reason) want write polygon as polygon primitive, not set of triangles
-	assert(false);         //remove if needn't
 
 	this->fs << "polygon { ";
 	this->fs << polygon->getPointsCount() << " ";

@@ -29,11 +29,11 @@ int main(int argc, const char **argv) {
 	}
 
 	Primitives primitives;
-        bool fix_size_to_square = true;
+	bool fix_size_to_square = true;
 
 	if (argc == 5) {
 		primitives.setBoundsByXY(atol(argv[3]), atol(argv[4]));
-                fix_size_to_square = false;
+		fix_size_to_square = false;
 	}
 
 	cout << "Loading input file" << endl;
@@ -101,7 +101,7 @@ int main(int argc, const char **argv) {
 	if (!primitives.loadFromXml(argv[1])) return 1;
 
 	cout << "Writing POV file" << endl;
-	PovWriter pov_writer(argv[2], primitives.getMinLat(), primitives.getMinLon(), primitives.getMaxLat(), primitives.getMaxLon(), fix_size_to_square);
+	PovWriter pov_writer(argv[2], primitives.getViewRect(), fix_size_to_square);
 	if (!pov_writer.isOpened()) return 1;
 
 	Osm2PovConverter osm2pov_converter(&primitives, &pov_writer);
