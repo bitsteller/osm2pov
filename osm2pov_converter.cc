@@ -319,58 +319,71 @@ void Osm2PovConverter::drawBuilding(MultiPolygon *multipolygon, double height, c
 }
 
 void Osm2PovConverter::drawBuildings(const char *key, const char *value, double default_height, const vector<const char*> &style, const vector<const char*> &roof_style_living, const vector<const char*> &roof_style_nonliving, const vector<const char*> &roof_style_religious) {
-    list<MultiPolygon*> multipolygons;
-    this->primitives->getMultiPolygonsWithAttribute(&multipolygons, key, value);
-    for (list<MultiPolygon*>::iterator it = multipolygons.begin(); it != multipolygons.end(); it++) {
-        const char *str;
-        str = (*it)->getAttribute("layer");
-        double extra_layer = (str == NULL ? 0 : atof(str)/500);
-        if (extra_layer < 0) continue; //skip objects under the ground
+	list<MultiPolygon*> multipolygons;
+	this->primitives->getMultiPolygonsWithAttribute(&multipolygons, key, value);
+	for (list<MultiPolygon*>::iterator it = multipolygons.begin(); it != multipolygons.end(); it++) {
+		const char *str;
+		str = (*it)->getAttribute("layer");
+		double extra_layer = (str == NULL ? 0 : atof(str)/500);
+		if (extra_layer < 0) continue; //skip objects under the ground
 
-        if ((*it)->hasAttribute("man_made", "tower")) continue; //don't render towers twice (later as special building)
+		if ((*it)->hasAttribute("man_made", "tower")) continue; //don't render towers twice (later as special building)
 
-        enum {
-        	default_building,
-        	nonliving_building,
-        	worship_building,
-        } building_type = default_building;
+		enum {
+			default_building,
+			nonliving_building,
+			worship_building,
+		} building_type = default_building;
 
-        double height = default_height;
-        if ((*it)->hasAttribute("amenity", "place_of_worship")) {
-        	building_type = worship_building;
-            height *= 2;
-        }
+		double height = default_height;
+		if ((*it)->hasAttribute("amenity", "place_of_worship"))
+			building_type = worship_building;
 
-        str = (*it)->getAttribute("building:levels");
-        if (str != NULL) height = 4 + (atof(str)-1) * 3;
-        str = (*it)->getAttribute("building:height");
-        if (str == NULL) str = (*it)->getAttribute("height");
-        if (str != NULL) height = readDimension(str);
+		bool height_defined = false;
+		str = (*it)->getAttribute("building:levels");
+		if (str != NULL) {
+			height = 4 + (atof(str)-1) * 3;
+			height_defined = true;
+		}
+		str = (*it)->getAttribute("building:height");
+		if (str == NULL) str = (*it)->getAttribute("height");
+		if (str != NULL) {
+			height = readDimension(str);
+			height_defined = true;
+		}
 
-        if (building_type == default_building) {
-        	if (height > 10 || (*it)->computeAreaSize() > 0.00000008) {    //empirically determined magic number
-        		building_type = nonliving_building;
-        	}
-        }
+		if (building_type == default_building) {
+			if (height > 10 || (*it)->computeAreaSize() > 0.00000008) {	//empirically determined magic number
+				building_type = nonliving_building;
+			}
+		}
 
-        {
-            stringstream s;
-            s << "Building " << (*it)->getId() << " (tag " << key;
-            if (value != NULL) s << "=" << value;
-            s << ")";
-            this->pov_writer->writeComment(s.str().c_str());
-        }
+		{
+			stringstream s;
+			s << "Building " << (*it)->getId() << " (tag " << key;
+			if (value != NULL) s << "=" << value;
+			s << ")";
+			this->pov_writer->writeComment(s.str().c_str());
+		}
 
-        const vector<const char*> *roof_style;
-        switch (building_type) {
-        	case default_building: roof_style = &roof_style_living; break;
-            case nonliving_building: roof_style = &roof_style_nonliving; break;
-        	case worship_building: roof_style = &roof_style_religious; break;
-        }
+		const vector<const char*> *roof_style;
+		switch (building_type) {
+			case default_building:
+				roof_style = &roof_style_living;
+				if (!height_defined) height += (double)((*it)->getId() % 5)/2 - 1;   //building has slightly random height
+				break;
+			case nonliving_building:
+				roof_style = &roof_style_nonliving;
+				break;
+			case worship_building:
+				roof_style = &roof_style_religious;
+				if (!height_defined) height *= 2;
+				break;
+		}
 
-        this->drawBuilding(*it, height+extra_layer, style[(*it)->getId() % style.size()], (*roof_style)[(*it)->getId() % roof_style->size()]);
-        delete *it;
-    }
+		this->drawBuilding(*it, height+extra_layer, style[(*it)->getId() % style.size()], (*roof_style)[(*it)->getId() % roof_style->size()]);
+		delete *it;
+	}
 }
 
 void Osm2PovConverter::drawSpecialBuildings(const char *key, const char *value, double default_height, const char *style, const char *roof_style) {
