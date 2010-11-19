@@ -46,20 +46,19 @@ void Osm2PovConverter::drawTowers(const char *key, const char *value, double wid
 	}
 }
 
-void Osm2PovConverter::drawWay(const vector<const Node*> *nodes, double width, double height, const char *style, bool including_links) {
-	bool first = true;
+void Osm2PovConverter::drawWay(const vector<const Node*> *nodes, double width, double height, const char *style, bool including_links, bool links_also_in_margin) {
 	double x_before, y_before;
 	double lon_before, lat_before;
-	for (vector<const Node*>::const_iterator it = nodes->begin(); it != nodes->end(); it++) {
-		double x = this->pov_writer->convertLonToCoord((*it)->getLon());
-		double y = this->pov_writer->convertLatToCoord((*it)->getLat());
+	for (size_t i = 0; i < nodes->size(); i++) {
+		const Node *node = (*nodes)[i];
+		double x = this->pov_writer->convertLonToCoord(node->getLon());
+		double y = this->pov_writer->convertLatToCoord(node->getLat());
 
-		if (first) {
-			this->point_field.addPoint((*it)->getLon(), (*it)->getLat(), this->pov_writer->metres2unit(width+1.5)*2);
-			first = false;
+		if (i == 0) {
+			this->point_field.addPoint(node->getLon(), node->getLat(), this->pov_writer->metres2unit(width+1.5)*2);
 		}
 		else {
-			this->point_field.addPointsInDistance(lon_before, lat_before, (*it)->getLon(), (*it)->getLat(), this->pov_writer->metres2unit(width+1.5)*2);
+			this->point_field.addPointsInDistance(lon_before, lat_before, node->getLon(), node->getLat(), this->pov_writer->metres2unit(width+1.5)*2);
 			double x_delta = x-x_before, y_delta = y-y_before;
 			double angle = (-(atan2(y_delta,x_delta) * 180 / M_PI)) + 180;
 			double length = sqrt(x_delta*x_delta+y_delta*y_delta);
@@ -67,11 +66,13 @@ void Osm2PovConverter::drawWay(const vector<const Node*> *nodes, double width, d
 			this->pov_writer->writeBox(x, y, this->pov_writer->metres2unit(width), this->pov_writer->metres2unit(height), length, angle, style);
 		}
 
-		if (including_links)
-			this->pov_writer->writeCylinder(x, y, this->pov_writer->metres2unit(width)/2, this->pov_writer->metres2unit(height), style);
+		if (including_links) {
+			if (links_also_in_margin || (i > 0 && i < nodes->size()-1))
+				this->pov_writer->writeCylinder(x, y, this->pov_writer->metres2unit(width)/2, this->pov_writer->metres2unit(height), style);
+		}
 
 		x_before = x; y_before = y;
-		lon_before = (*it)->getLon(); lat_before = (*it)->getLat();
+		lon_before = node->getLon(); lat_before = node->getLat();
 	}
 }
 
@@ -105,7 +106,7 @@ void Osm2PovConverter::drawWays(const char *key, const char *value, double width
 		}
 
 
-		this->drawWay((*it)->getNodes(), real_width, height+extra_layer, style, including_links);
+		this->drawWay((*it)->getNodes(), real_width, height+extra_layer, style, including_links, true);
 	}
 }
 
@@ -140,8 +141,8 @@ void Osm2PovConverter::drawWaysWithBorder(const char *key, const char *value, do
 			s << ", width: " << real_width << "m" << ")";
 			this->pov_writer->writeComment(s.str().c_str());
 		}
-		drawWay((*it)->getNodes(), real_width, height-0.0011+extra_layer, border_style, true);
-		drawWay((*it)->getNodes(), real_width-border_width_percent*real_width/100*2, height+extra_layer, (*it)->hasAttribute("tunnel", "yes") && strcmp(style, "highway") == 0 ? "highway_tunnel" : style, true);
+		drawWay((*it)->getNodes(), real_width, height-0.0011+extra_layer, border_style, true, extra_layer == 0);
+		drawWay((*it)->getNodes(), real_width-border_width_percent*real_width/100*2, height+extra_layer, (*it)->hasAttribute("tunnel", "yes") && strcmp(style, "highway") == 0 ? "highway_tunnel" : style, true, true);
 	}
 }
 
@@ -317,7 +318,62 @@ void Osm2PovConverter::drawBuilding(MultiPolygon *multipolygon, double height, c
 	this->pov_writer->writePolygon(multipolygon->getId(), &triangles, height, roof_style);
 }
 
-void Osm2PovConverter::drawBuildings(const char *key, const char *value, double default_height, const char *style, const char *roof_style_default, const char *roof_style_religious) {
+void Osm2PovConverter::drawBuildings(const char *key, const char *value, double default_height, const vector<const char*> &style, const vector<const char*> &roof_style_living, const vector<const char*> &roof_style_nonliving, const vector<const char*> &roof_style_religious) {
+    list<MultiPolygon*> multipolygons;
+    this->primitives->getMultiPolygonsWithAttribute(&multipolygons, key, value);
+    for (list<MultiPolygon*>::iterator it = multipolygons.begin(); it != multipolygons.end(); it++) {
+        const char *str;
+        str = (*it)->getAttribute("layer");
+        double extra_layer = (str == NULL ? 0 : atof(str)/500);
+        if (extra_layer < 0) continue; //skip objects under the ground
+
+        if ((*it)->hasAttribute("man_made", "tower")) continue; //don't render towers twice (later as special building)
+
+        enum {
+        	default_building,
+        	nonliving_building,
+        	worship_building,
+        } building_type = default_building;
+
+        double height = default_height;
+        if ((*it)->hasAttribute("amenity", "place_of_worship")) {
+        	building_type = worship_building;
+            height *= 2;
+        }
+
+        str = (*it)->getAttribute("building:levels");
+        if (str != NULL) height = 4 + (atof(str)-1) * 3;
+        str = (*it)->getAttribute("building:height");
+        if (str == NULL) str = (*it)->getAttribute("height");
+        if (str != NULL) height = readDimension(str);
+
+        if (building_type == default_building) {
+        	if (height > 10 || (*it)->computeAreaSize() > 0.00000008) {    //empirically determined magic number
+        		building_type = nonliving_building;
+        	}
+        }
+
+        {
+            stringstream s;
+            s << "Building " << (*it)->getId() << " (tag " << key;
+            if (value != NULL) s << "=" << value;
+            s << ")";
+            this->pov_writer->writeComment(s.str().c_str());
+        }
+
+        const vector<const char*> *roof_style;
+        switch (building_type) {
+        	case default_building: roof_style = &roof_style_living; break;
+            case nonliving_building: roof_style = &roof_style_nonliving; break;
+        	case worship_building: roof_style = &roof_style_religious; break;
+        }
+
+        this->drawBuilding(*it, height+extra_layer, style[(*it)->getId() % style.size()], (*roof_style)[(*it)->getId() % roof_style->size()]);
+        delete *it;
+    }
+}
+
+void Osm2PovConverter::drawSpecialBuildings(const char *key, const char *value, double default_height, const char *style, const char *roof_style) {
 	list<MultiPolygon*> multipolygons;
 	this->primitives->getMultiPolygonsWithAttribute(&multipolygons, key, value);
 	for (list<MultiPolygon*>::iterator it = multipolygons.begin(); it != multipolygons.end(); it++) {
@@ -325,15 +381,8 @@ void Osm2PovConverter::drawBuildings(const char *key, const char *value, double 
 		str = (*it)->getAttribute("layer");
 		double extra_layer = (str == NULL ? 0 : atof(str)/500);
 		if (extra_layer < 0) continue; //skip objects under the ground
-		
-		if ((*it)->hasAttribute("man_made", "tower") and strcmp(key, "building") == 0) continue; //don't render towers twice
 
 		double height = default_height;
-		const char *roof_style = roof_style_default;
-		if ((*it)->hasAttribute("amenity", "place_of_worship")) {
-			height *= 2;
-			if (roof_style_religious != NULL) roof_style = roof_style_religious;
-		}
 		str = (*it)->getAttribute("building:levels");
 		if (str != NULL) height = 4 + (atof(str)-1) * 3;
 		str = (*it)->getAttribute("building:height");

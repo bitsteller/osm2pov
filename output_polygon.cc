@@ -74,7 +74,7 @@ MultiPolygon::~MultiPolygon() {
 // -1 0 1  1 1 1  Return direction number of point from rectange. If point is in rectangle, then it returns zeros,
 // -1 0 1  0 0 0  otherwise numbers from schema.
 // -1 0 1 -1-1-1
-void GetDirectionOfPointFromRectangle(double x, double y, const Rect *rect, int *output_horiz, int *output_vert) {
+static void GetDirectionOfPointFromRectangle(double x, double y, const Rect *rect, int *output_horiz, int *output_vert) {
 	if (x < rect->minlon) *output_horiz = -1;
 	else if (x > rect->maxlon) *output_horiz = 1;
 	else *output_horiz = 0;
@@ -84,7 +84,7 @@ void GetDirectionOfPointFromRectangle(double x, double y, const Rect *rect, int 
 	else *output_vert = 0;
 }
 
-void RemoveUnusedNodesOutsideOfRectangle(vector<const XY*> *nodes, const Rect *interest_rect) {
+static void RemoveUnusedNodesOutsideOfRectangle(vector<const XY*> *nodes, const Rect *interest_rect) {
 	assert(nodes->size() >= 4);
 
 	int horiz, vert;
@@ -133,7 +133,7 @@ void RemoveUnusedNodesOutsideOfRectangle(vector<const XY*> *nodes, const Rect *i
 	}
 }
 
-double ComputeArea(const vector<const XY*> *polygon) {
+static double ComputeArea(const vector<const XY*> *polygon) {
 	double result = 0.0f;
 
 	for (size_t p = polygon->size() - 1, q = 0; q < polygon->size(); p = q++) {
@@ -143,7 +143,7 @@ double ComputeArea(const vector<const XY*> *polygon) {
 	return result * 0.5f;
 }
 
-bool AddPolygonToList(const list<const Way*> &ways, list<vector<const XY*> > *output_list, const Rect *interest_rect) {
+static bool AddPolygonToList(const list<const Way*> &ways, list<vector<const XY*> > *output_list, const Rect *interest_rect) {
 	assert(!ways.empty());
 
 	list<const Way*> remaining_ways = ways;
@@ -323,6 +323,19 @@ void MultiPolygon::setDone() {
 	}
 
 	this->is_done = true;
+}
+
+double MultiPolygon::computeAreaSize() const {      //returns area size in undefined units (fix!)
+    double area_size = 0;
+
+    for (list<vector<const XY*> >::const_iterator it = this->outer_parts.begin(); it != this->outer_parts.end(); it++) {
+    	area_size += -ComputeArea(&(*it));
+    }
+    for (list<vector<const XY*> >::const_iterator it = this->holes.begin(); it != this->holes.end(); it++) {
+        area_size -= -ComputeArea(&(*it));
+    }
+
+    return area_size;
 }
 
 const char *MultiPolygon::getAttribute(const char *key) const {

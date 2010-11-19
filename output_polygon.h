@@ -68,6 +68,7 @@ class MultiPolygon {
 	void addHole(const Way *hole);
 	bool hasAnyOuterPart() const { return !this->outer_ways.empty(); }
 	void setDone();
+	double computeAreaSize() const;
 	const list<vector<const XY*> > *getOuterParts() const { return &this->outer_parts; }
 	const list<vector<const XY*> > *getHoles() const { return &this->holes; }
 	const char *getAttribute(const char *key) const;

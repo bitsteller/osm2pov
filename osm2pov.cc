@@ -144,14 +144,14 @@ int main(int argc, const char **argv) {
 	osm2pov_converter.drawAreas("landuse", "cemetery", 0.012, "cemetery");
 	osm2pov_converter.drawAreas("natural", "beach", 0.012, "beach");
 
-	osm2pov_converter.drawBuildings("building", NULL, 4.5, "building", "building_roof", "building_religious_roof");
+	osm2pov_converter.drawBuildings("building", NULL, 4.5, { "building" }, { "building_living_roof1", "building_living_roof2", "building_living_roof3", "building_living_roof4" }, { "building_nonliving_roof1", "building_nonliving_roof2" }, { "building_religious_roof" });
 
-	osm2pov_converter.drawBuildings("leisure", "stadium", 12, "man_made_tower", "man_made_tower");
+	osm2pov_converter.drawSpecialBuildings("leisure", "stadium", 12, "man_made_tower", "man_made_tower");
 	osm2pov_converter.drawTowers("artwork_type", "obelisk", 4, 25, "man_made_tower"); //FIXME: for testing only
 	osm2pov_converter.drawTowers("man_made", "tower", 4, 25, "man_made_tower");
 	osm2pov_converter.drawTowers("amenity", "tower", 4, 25, "man_made_tower");
-	osm2pov_converter.drawBuildings("man_made", "tower", 25, "man_made_tower", "building_roof");
-	osm2pov_converter.drawBuildings("amenity", "tower", 25, "man_made_tower", "building_roof");
+	osm2pov_converter.drawSpecialBuildings("man_made", "tower", 25, "man_made_tower", "building_nonliving_roof1");
+	osm2pov_converter.drawSpecialBuildings("amenity", "tower", 25, "man_made_tower", "building_nonliving_roof1");
 	osm2pov_converter.drawWays("barrier", "wall", 0.3, 3, "wall", true);
 
 	osm2pov_converter.drawObjects("power_source", "wind", "windpower", 1.5, 1, 1);
