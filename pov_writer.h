@@ -29,7 +29,7 @@ class PovWriter {
 	void writeSprite(double x, double y, const char *sprite_style, size_t sprite_style_number, double scale);
 
 	double convertLatToCoord(double lat) const {
-		return (lat - (this->view_rect.minlat+this->view_rect.maxlat)/2) / LAT_WEIGHT * 100;
+		return (lat - (this->view_rect.minlat+this->view_rect.maxlat)/2) / LAT_WEIGHT * 100 * 2;
 	}
 	double convertLonToCoord(double lon) const {
 		return (lon - (this->view_rect.minlon+this->view_rect.maxlon)/2) / LON_WEIGHT * 100 + 100;
