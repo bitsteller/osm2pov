@@ -1,10 +1,11 @@
-light_source { <100,1000,70.7> color <0.6,0.6,0.6> shadowless }
-light_source { <0,1000,0> color <0.8,0.8,0.8> rotate <-20, -50, 0> translate <0,-500,70.7> }
-light_source { <0,1000,0> color <0.2,0.2,0.2> rotate <-20, -50, 0> shadowless }
+light_source { <800,900,300> color <0.6,0.6,0.6> rotate <-25,40,0> }
+light_source { <-800,900,300> color <0.5,0.5,0.5> rotate <-25,140,0> shadowless }
+light_source { <800,900,-1000> color <0.3,0.3,0.3> rotate <25,220,0> shadowless }
+light_source { <-800,900,-800> color <0.3,0.3,0.3> rotate <25,320,0> shadowless }
 light_source { <500,100,-500> color <0.6,0.6,0.6> shadowless }
-sky_sphere { pigment { rgb <0.2, 0.4, 0.9> } }
+sky_sphere { pigment { rgb <0.35, 0.65, 1> } }
 
-#declare ground=texture { pigment { rgb <0.7,0.97,0.3> } }  // bozo scale 0.1 color_map { [0.00 color <0.65,0.95,0.2> ] [0.50 color rgb <0.7,0.97,0.3> ] [1.00 color <0.75,1,0.35> ] } } hollow on }
+#declare ground=texture { pigment { rgb <0.8,1,0.35> } }  // bozo scale 0.1 color_map { [0.00 color <0.65,0.95,0.2> ] [0.50 color rgb <0.7,0.97,0.3> ] [1.00 color <0.75,1,0.35> ] } } hollow on }
 #declare building=texture { pigment { agate scale 0.1 color_map { [0.2 color rgb <0.98,0.98,0.58> ] [0.8 color rgb <1,1,0.6> ] } } finish { diffuse 0.6 ambient 0.4 } }
 #declare building_living_roof1=texture { pigment { rgb <0.7,0.2,0.1> } finish { diffuse 0.6 ambient 0.6 } }
 #declare building_living_roof2=texture { pigment { rgb <0.7,0.2,0.1> } finish { diffuse 0.6 ambient 0.3 } }
