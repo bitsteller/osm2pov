@@ -112,7 +112,7 @@ void Osm2PovConverter::drawWays(const char *key, const char *value, double width
 
 void Osm2PovConverter::drawWaysWithBorder(const char *key, const char *value, double width, double height, const char *style, double border_width_percent, const char *border_style) {
 	list<const Way*> ways;
-	primitives->getWaysWithAttribute(&ways, key, value);
+	this->primitives->getWaysWithAttribute(&ways, key, value);
 	for (list<const Way*>::iterator it = ways.begin(); it != ways.end(); it++) {
 		if ((*it)->hasAttribute("area", "yes")) {
 			stringstream s;
@@ -124,10 +124,11 @@ void Osm2PovConverter::drawWaysWithBorder(const char *key, const char *value, do
 			drawArea((*it)->getId(), (*it)->getNodes(), height+0.0001, strcmp(style,"highway") == 0 ? "highway_area" : style);
 			continue;
 		}
+		const bool is_tunnel = (*it)->hasAttribute("tunnel", "yes");
 		const char *extra_layer_str = (*it)->getAttribute("layer");
 		double extra_layer = (extra_layer_str == NULL ? 0 : atof(extra_layer_str)/500);
-		if ((*it)->hasAttribute("tunnel", "yes")) height /= 2;	//!
-		if (extra_layer < 0) continue; //skip objects under the ground
+		if (extra_layer < 0 && !is_tunnel) continue; //skip objects under the ground
+//		if (is_tunnel) height /= 2;	//!
 		
 		//overide default width if it is defined in the width tag
 		double real_width = width;
@@ -142,7 +143,7 @@ void Osm2PovConverter::drawWaysWithBorder(const char *key, const char *value, do
 			this->pov_writer->writeComment(s.str().c_str());
 		}
 		drawWay((*it)->getNodes(), real_width, height-0.0011+extra_layer, border_style, true, extra_layer == 0);
-		drawWay((*it)->getNodes(), real_width-border_width_percent*real_width/100*2, height+extra_layer, (*it)->hasAttribute("tunnel", "yes") && strcmp(style, "highway") == 0 ? "highway_tunnel" : style, true, true);
+		drawWay((*it)->getNodes(), real_width-border_width_percent*real_width/100*2, height+extra_layer, is_tunnel && strcmp(style, "highway") == 0 ? "highway_tunnel" : style, true, true);
 	}
 }
 
@@ -168,7 +169,7 @@ void Osm2PovConverter::drawAreas(const char *key, const char *value, double heig
 	for (list<MultiPolygon*>::iterator it = multipolygons.begin(); it != multipolygons.end(); it++) {
 		const char *extra_layer_str = (*it)->getAttribute("layer");
 		double extra_layer = (extra_layer_str == NULL ? 0 : atof(extra_layer_str)/500);
-		if (extra_layer < 0) continue; //skip objects under the ground
+		if (extra_layer < 0) extra_layer = 0;
 
 		{
 			stringstream s;
@@ -192,7 +193,7 @@ void Osm2PovConverter::drawForests(const char *key, const char *value, double fl
 	for (list<MultiPolygon*>::iterator it = multipolygons.begin(); it != multipolygons.end(); it++) {
 		const char *extra_layer_str = (*it)->getAttribute("layer");
 		double extra_layer = (extra_layer_str == NULL ? 0 : atof(extra_layer_str)/500);
-		if (extra_layer < 0) continue; //skip objects under the ground
+		if (extra_layer < 0) extra_layer = 0;
 
 		{
 			stringstream s;
