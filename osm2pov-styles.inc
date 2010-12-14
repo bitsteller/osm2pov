@@ -40,7 +40,7 @@ sky_sphere { pigment { rgb <0.35, 0.65, 1> } }
 #declare river=texture { T_Chrome_2D normal { waves 0.2 frequency 1000.0 scale 4.0 turbulence 0.1 rotate <0,-45,0> } }
 #declare forest=texture { pigment { rgb <0.35,0.7,0.1> } finish { phong 1 } }
 #declare greenplace=texture { pigment { rgb <0.5,0.8,0.1> } finish { phong 1 } }
-#declare landuse_farmland=texture { pigment { agate scale 0.04 color_map { [0.8 color rgb <0.5,0.3,0.1> ] [0.4 color rgb <0.6,0.4,0.1> ] [0.3 color rgb <0.7,0.5,0.2> ] } } finish { phong 1 } }
+#declare landuse_farmland=texture { pigment { agate scale 0.08 color_map { [0.0 color rgb <0.8,1,0.35>] [0.85 color rgb <0.5,0.3,0.1> ] [0.9 color rgb <0.6,0.4,0.1> ] } } finish { phong 1 } }
 #declare landuse_residential=texture { pigment { rgb <0.70,0.82,0.65> } finish { phong 1 } }
 #declare landuse_industrial=texture { pigment { rgb <0.75,0.75,0.75> } finish { phong 1 } }
 #declare playground=texture { pigment { rgb <0.8,0.6,0.3> } finish { phong 1 } }
