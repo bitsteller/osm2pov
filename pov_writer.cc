@@ -34,7 +34,7 @@ PovWriter::PovWriter(const char *filename, const Rect &view_rect, bool fix_size_
 	this->fs.precision(12);
 
 	this->fs << "camera { orthographic location <0,0,-230> direction <0,0,13>";
-	this->fs << " up <0," << ((this->view_rect.maxlat-this->view_rect.minlat)*76.56/LAT_WEIGHT) << ",0>";
+	this->fs << " up <0," << ((this->view_rect.maxlat-this->view_rect.minlat)*76.54/LAT_WEIGHT) << ",0>";
 	this->fs << " right <" << ((this->view_rect.maxlon-this->view_rect.minlon)*100/LON_WEIGHT) << ",0,0>";
 	this->fs << " look_at <0,0,0> translate <100,0,0> rotate <22.5,0,0> }" << endl;
 	this->fs << "#include \"osm2pov-styles.inc\"" << endl;

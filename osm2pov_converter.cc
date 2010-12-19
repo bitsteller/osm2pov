@@ -128,7 +128,7 @@ void Osm2PovConverter::drawWaysWithBorder(const char *key, const char *value, do
 		const char *extra_layer_str = (*it)->getAttribute("layer");
 		double extra_layer = (extra_layer_str == NULL ? 0 : atof(extra_layer_str)/500);
 		if (extra_layer < 0 && !is_tunnel) continue; //skip objects under the ground
-//		if (is_tunnel) height /= 2;	//!
+		if (is_tunnel) height /= 2;	//!
 		
 		//overide default width if it is defined in the width tag
 		double real_width = width;
