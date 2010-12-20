@@ -313,10 +313,11 @@ void Osm2PovConverter::drawBuilding(MultiPolygon *multipolygon, double height, c
 		}
 	}
 
-			//roof
-	vector<Triangle> triangles;
-	multipolygon->convertToTriangles(&triangles);
-	this->pov_writer->writePolygon(multipolygon->getId(), &triangles, height, roof_style);
+	if (roof_style != NULL) {		//roof
+		vector<Triangle> triangles;
+		multipolygon->convertToTriangles(&triangles);
+		this->pov_writer->writePolygon(multipolygon->getId(), &triangles, height, roof_style);
+	}
 }
 
 void Osm2PovConverter::drawBuildings(const char *key, const char *value, double default_height, const vector<const char*> &style, const vector<const char*> &roof_style_living, const vector<const char*> &roof_style_nonliving, const vector<const char*> &roof_style_religious) {
@@ -328,7 +329,10 @@ void Osm2PovConverter::drawBuildings(const char *key, const char *value, double 
 		double extra_layer = (str == NULL ? 0 : atof(str)/500);
 		if (extra_layer < 0) continue; //skip objects under the ground
 
-		if ((*it)->hasAttribute("man_made", "tower")) continue; //don't render towers twice (later as special building)
+		 //don't render towers twice (later as special building) (this isn't nice piece of code - duplicating)
+		if ((*it)->hasAttribute("man_made", "tower")) continue;
+		if ((*it)->hasAttribute("amenity", "tower")) continue;
+		if ((*it)->hasAttribute("man_made", "chimney")) continue;
 
 		enum {
 			default_building,
