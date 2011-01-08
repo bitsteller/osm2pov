@@ -118,28 +118,28 @@ int main(int argc, const char **argv) {
 	osm2pov_converter.drawWaysWithBorder("highway", "unclassified", 6, 0.06, "highway", 10, "highway_border");
 	osm2pov_converter.drawWaysWithBorder("highway", "road", 6, 0.06, "highway", 10, "highway_border");
 
-	osm2pov_converter.drawWays("highway", "residential", 5, 0.06, "highway", true);
-	osm2pov_converter.drawWays("highway", "living_street", 5, 0.06, "highway", true);
-	osm2pov_converter.drawWays("highway", "service", 4, 0.06, "highway", true);
-	osm2pov_converter.drawWays("highway", "pedestrian", 4, 0.06, "highway", true);
+	osm2pov_converter.drawWays("highway", "residential", 5, 0.06, "highway", true, true);
+	osm2pov_converter.drawWays("highway", "living_street", 5, 0.06, "highway", true, true);
+	osm2pov_converter.drawWays("highway", "service", 4, 0.06, "highway", true, true);
+	osm2pov_converter.drawWays("highway", "pedestrian", 4, 0.06, "highway", true, true);
 
-	osm2pov_converter.drawWays("highway", "track", 3, 0.045, "path", true);
-	osm2pov_converter.drawWays("highway", "footway", 2, 0.03, "footway", true);
-	osm2pov_converter.drawWays("highway", "steps", 2, 0.03, "footway", true);
-	osm2pov_converter.drawWays("highway", "cycleway", 2.5, 0.03, "footway", true);
-	osm2pov_converter.drawWays("highway", "path", 1.2, 0.015, "path", true);
+	osm2pov_converter.drawWays("highway", "track", 3, 0.045, "path", true, false);
+	osm2pov_converter.drawWays("highway", "footway", 2, 0.03, "footway", true, false);
+	osm2pov_converter.drawWays("highway", "steps", 2, 0.03, "footway", true, false);
+	osm2pov_converter.drawWays("highway", "cycleway", 2.5, 0.03, "footway", true, false);
+	osm2pov_converter.drawWays("highway", "path", 1.2, 0.015, "path", true, false);
 	osm2pov_converter.drawAreas("amenity", "parking", 0.0009, "highway_area");
 
-	osm2pov_converter.drawWays("railway", "rail", 5, 0.09, "railway", false);
-	osm2pov_converter.drawWays("railway", "abandoned", 5, 0.09, "railway", false);
-	osm2pov_converter.drawWays("railway", "disused", 5, 0.09, "railway", false);
-	osm2pov_converter.drawWays("railway", "tram", 2.25, 0.12, "railway_tram", true);
+	osm2pov_converter.drawWays("railway", "rail", 5, 0.09, "railway", false, false);
+	osm2pov_converter.drawWays("railway", "abandoned", 5, 0.09, "railway", false, false);
+	osm2pov_converter.drawWays("railway", "disused", 5, 0.09, "railway", false, false);
+	osm2pov_converter.drawWays("railway", "tram", 2.25, 0.12, "railway_tram", true, false);
 
 	osm2pov_converter.drawAreas("leisure", "playground", 0.013, "playground");
 	osm2pov_converter.drawAreas("leisure", "pitch", 0.013, "playground");
 
-	osm2pov_converter.drawWays("aeroway", "runway", 40, 0.07, "highway", true);
-	osm2pov_converter.drawWays("aeroway", "taxiway", 7, 0.07, "highway", true);
+	osm2pov_converter.drawWays("aeroway", "runway", 40, 0.07, "highway", true, true);
+	osm2pov_converter.drawWays("aeroway", "taxiway", 7, 0.07, "highway", true, true);
 
 	osm2pov_converter.drawAreas("landuse", "cemetery", 0.012, "cemetery");
 	osm2pov_converter.drawAreas("natural", "beach", 0.012, "beach");
@@ -153,7 +153,7 @@ int main(int argc, const char **argv) {
 	osm2pov_converter.drawSpecialBuildings("man_made", "tower", 25, "man_made_tower", "building_nonliving_roof1");
 	osm2pov_converter.drawSpecialBuildings("amenity", "tower", 25, "man_made_tower", "building_nonliving_roof1");
 	osm2pov_converter.drawSpecialBuildings("man_made", "chimney", 50, "man_made_tower", NULL);
-	osm2pov_converter.drawWays("barrier", "wall", 0.3, 3, "wall", true);
+	osm2pov_converter.drawWays("barrier", "wall", 0.3, 3, "wall", true, false);
 
 	osm2pov_converter.drawObjects("power_source", "wind", "windpower", 1.5, 1, 1);
 	osm2pov_converter.drawObjects("amenity", "post_box", "postbox", 0.1, 1, 1);
@@ -173,9 +173,9 @@ int main(int argc, const char **argv) {
 	osm2pov_converter.drawAreas("landuse", "farm", 0.00009, "landuse_farmland");
 	osm2pov_converter.drawAreas("landuse", "farmyard", 0.00009, "landuse_farmland");
 
-	osm2pov_converter.drawWays("waterway", "stream", 2, 0.00013, "river", true);
-	osm2pov_converter.drawWays("waterway", "canal", 2.5, 0.00013, "river", true);
-	osm2pov_converter.drawWays("waterway", "river", 5, 0.00013, "river", true);
+	osm2pov_converter.drawWays("waterway", "stream", 2, 0.00013, "river", true, true);
+	osm2pov_converter.drawWays("waterway", "canal", 2.5, 0.00013, "river", true, true);
+	osm2pov_converter.drawWays("waterway", "river", 5, 0.00013, "river", true, true);
 	osm2pov_converter.drawAreas("waterway", "riverbank", 0.00013, "river");
 	osm2pov_converter.drawAreas("natural", "water", 0.00013, "river");
 	osm2pov_converter.drawAreas("landuse", "basin", 0.00013, "river");

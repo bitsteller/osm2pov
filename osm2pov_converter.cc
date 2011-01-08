@@ -76,11 +76,11 @@ void Osm2PovConverter::drawWay(const vector<const Node*> *nodes, double width, d
 	}
 }
 
-void Osm2PovConverter::drawWays(const char *key, const char *value, double width, double height, const char *style, bool including_links) {
+void Osm2PovConverter::drawWays(const char *key, const char *value, double width, double height, const char *style, bool including_links, bool area_possible) {
 	list<const Way*> ways;
 	this->primitives->getWaysWithAttribute(&ways, key, value);
 	for (list<const Way*>::iterator it = ways.begin(); it != ways.end(); it++) {
-		if ((*it)->hasAttribute("area", "yes")) {
+		if (area_possible && (*it)->hasAttribute("area", "yes")) {
 			stringstream s;
 			s << "Area (closed way with area=yes) " << (*it)->getId();
 			this->pov_writer->writeComment(s.str().c_str());
