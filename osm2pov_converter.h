@@ -2,6 +2,8 @@
 #ifndef OSM2POV_CONVERTER_H_
 #define OSM2POV_CONVERTER_H_
 
+#include "primitives.h"
+
 class Osm2PovConverter {
 	private:
 	class Primitives *primitives;
@@ -9,6 +11,7 @@ class Osm2PovConverter {
 	PointField point_field;
 
 	static double readDimension(const char *dimension_text);
+	static double computeWayWidth(const Way *way, double default_width);
 	void drawWay(const vector<const class Node*> *nodes, double width, double height, const char *style, bool including_links, bool links_also_in_margin);
 	void drawBuilding(class MultiPolygon *multipolygon, double height, const char *style, const char *roof_style);
 	void drawBuildingWalls(const vector<const class XY*> *points, double height, const char *style);
