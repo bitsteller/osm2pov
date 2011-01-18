@@ -31,7 +31,7 @@ double Osm2PovConverter::computeWayWidth(const Way *way, double default_width) {
    }
    else if (lanes_str != NULL) { //use lanes tag
       double lane_width = default_width/2; //assuming the default width is for 2 lanes
-      if (lane_width > 4) lane_width = 4; //but use max. 4m per lane
+      if (lane_width > 5) lane_width = 5; //but use max. 4m per lane
       if (atof(lanes_str) > 0) real_width = lane_width * atof(lanes_str);//!
    }
    return real_width;
@@ -143,10 +143,7 @@ void Osm2PovConverter::drawWaysWithBorder(const char *key, const char *value, do
 		if (extra_layer < 0 && !is_tunnel) continue; //skip objects under the ground
 		if (is_tunnel) height /= 2;	//!
 		
-		//overide default width if it is defined in the width tag
-		double real_width = width;
-		const char *width_str = (*it)->getAttribute("width");
-		if (width_str != NULL) real_width = readDimension(width_str);//!
+		double real_width = computeWayWidth((*it), width);
 
 		{
 			stringstream s;
