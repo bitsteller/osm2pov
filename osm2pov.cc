@@ -176,6 +176,7 @@ int main(int argc, const char **argv) {
 	osm2pov_converter.drawAreas("landuse", "farm", 0.00009, "landuse_farmland");
 	osm2pov_converter.drawAreas("landuse", "farmyard", 0.00009, "landuse_farmland");
 
+	osm2pov_converter.drawWays("waterway", "drain", 1, 0.00013, "river", true, true);
 	osm2pov_converter.drawWays("waterway", "stream", 2, 0.00013, "river", true, true);
 	osm2pov_converter.drawWays("waterway", "canal", 2.5, 0.00013, "river", true, true);
 	osm2pov_converter.drawWays("waterway", "river", 5, 0.00013, "river", true, true);
