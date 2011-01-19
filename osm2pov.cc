@@ -166,6 +166,7 @@ int main(int argc, const char **argv) {
 
 	osm2pov_converter.drawAreas("nature", "scrub", 0.00012, "greenplace");
 	osm2pov_converter.drawForests("leisure", "park", 0.00012, "greenplace", "tree", 1, 1, 6);
+	osm2pov_converter.drawForests("leisure", "garden", 0.00012, "greenplace", "tree", 1, 1, 6);
 	osm2pov_converter.drawAreas("landuse", "village_green", 0.00012, "greenplace");
 	osm2pov_converter.drawAreas("landuse", "allotments", 0.00012, "greenplace");
 	osm2pov_converter.drawAreas("landuse", "meadow", 0.00012, "greenplace");
