@@ -394,10 +394,6 @@ struct Point {
 	size_t left_pos, right_pos;
 	bool finished;
 	bool is_in_hole;
-
-	Point() : finished(false), is_in_hole(false) { }
-	Point(const XY *xy, size_t node_pos, size_t left_pos, size_t right_pos, bool is_in_hole) :
-		xy(xy), node_pos(node_pos), left_pos(left_pos), right_pos(right_pos), is_in_hole(is_in_hole) { }
 };
 
 bool IsPointInTriangle(const XY *point, const XY *tr_point1, const XY *tr_point2, const XY *tr_point3) {
@@ -514,6 +510,8 @@ void MultiPolygon::convertToTriangles(vector<Triangle> *triangles) const {
 				points[i].node_pos = i;
 				points[i].left_pos = (i == 0 ? outer_part_it->size()-2 : i-1);
 				points[i].right_pos = (i == outer_part_it->size()-2 ? 0 : i+1);
+				points[i].is_in_hole = false;
+				points[i].finished = false;
 
 				opened_points.insert(make_pair(points[i].xy->x, &points[i]));
 			}
@@ -526,6 +524,7 @@ void MultiPolygon::convertToTriangles(vector<Triangle> *triangles) const {
 					points[i+j].left_pos = i+(j == 0 ? it->size()-2 : j-1);
 					points[i+j].right_pos = i+(j == it->size()-2 ? 0 : j+1);
 					points[i+j].is_in_hole = true;
+					points[i+j].finished = false;
 
 					opened_points.insert(make_pair(points[i+j].xy->x, &points[i+j]));
 				}
@@ -613,6 +612,9 @@ void MultiPolygon::convertToTriangles(vector<Triangle> *triangles) const {
 				points[points_cnt].left_pos = points[right_pos_now].left_pos;
 				points[points[right_pos_now].left_pos].right_pos = points_cnt;
 				points[points_cnt].right_pos = start_pos_now;
+				points[points_cnt].is_in_hole = false;
+				points[points_cnt].finished = false;
+				
 				points[start_pos_now].left_pos = points_cnt;
 
 				points[right_pos_now].left_pos = left_pos_now;
