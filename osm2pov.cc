@@ -170,6 +170,7 @@ int main(int argc, const char **argv) {
 	osm2pov_converter.drawAreas("landuse", "village_green", 0.00012, "greenplace");
 	osm2pov_converter.drawAreas("landuse", "allotments", 0.00012, "greenplace");
 	osm2pov_converter.drawAreas("landuse", "meadow", 0.00012, "greenplace");
+	osm2pov_converter.drawAreas("landuse", "greenfield", 0.00012, "greenplace");
 
 	osm2pov_converter.drawAreas("landuse", "residential", 0.00007, "landuse_residential");
 	osm2pov_converter.drawAreas("landuse", "industrial", 0.00008, "landuse_industrial");
