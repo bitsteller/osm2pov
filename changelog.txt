@@ -1,5 +1,7 @@
 Osm2Pov changelog:
 
+For newest changes, see commits at https://github.com/guerda/osm2pov/commits/master or https://github.com/bitsteller/osm2pov
+
 0.2.3 (2010-05-04)
  - partially merged with http://github.com/bitsteller/osm2pov - add support for trees, beaches, post-boxes, tram railways
  - improved style for railways

@@ -42,12 +42,14 @@ $ ./configure
 $ make
 
 If make failed, check if you really have libexpat1-dev, configure don't check it.
-If compiler doesn't know -std=c++0x option, check you have gcc at least 4.3. If you use other compiler, try remove this option from makefile. If it
+If compiler doesn't know -std=c++0x option, check if you have gcc at least 4.3. If you use other compiler, try remove this option from makefile.
 
 Now you have a binary ./osm2pov in current directory.
 If you want, you can install it:
 
 # make install
+
+Note for Mac OS X users: Unfortunately, standard version of gcc is 4.2 here. Try to proceed by this guideline: http://wiki.openstreetmap.org/wiki/Osm2pov_on_the_Mac
 
 
 || Compiling on Windows: ||
