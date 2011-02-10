@@ -22,19 +22,19 @@ double Osm2PovConverter::readDimension(const char *dimension_text) {
 }
 
 double Osm2PovConverter::computeWayWidth(const Way *way, double default_width) {
-   double real_width = default_width; //use default width, when no other tag specified
-   const char *width_str = way->getAttribute("width");
-   const char *lanes_str = way->getAttribute("lanes");
+	double real_width = default_width; //use default width, when no other tag specified
+	const char *width_str = way->getAttribute("width");
+	const char *lanes_str = way->getAttribute("lanes");
 
-   if (width_str != NULL) { //use width tag
-      if (readDimension(width_str) > 0) real_width = readDimension(width_str);//!
-   }
-   else if (lanes_str != NULL) { //use lanes tag
-      double lane_width = default_width/2; //assuming the default width is for 2 lanes
-      if (lane_width > 5) lane_width = 5; //but use max. 4m per lane
-      if (atof(lanes_str) > 0) real_width = lane_width * atof(lanes_str);//!
-   }
-   return real_width;
+	if (width_str != NULL) { //use width tag
+		if (readDimension(width_str) > 0) real_width = readDimension(width_str);
+	}
+	else if (lanes_str != NULL) { //use lanes tag
+		double lane_width = default_width/2; //assuming the default width is for 2 lanes
+		if (lane_width > 5) lane_width = 5; //but use max. 4m per lane
+		if (atof(lanes_str) > 0) real_width = lane_width * atof(lanes_str);
+	}
+	return real_width;
 }
 
 void Osm2PovConverter::drawTowers(const char *key, const char *value, double width, double default_height, const char *style) {
@@ -261,7 +261,7 @@ void Osm2PovConverter::drawObjects(const char *key, const char *value, const cha
 	}
 }
 
-void Osm2PovConverter::drawBuildingWalls(const vector<const XY*> *points, double height, const char *style) {
+void Osm2PovConverter::drawBuildingWalls(const vector<const XY*> *points, double min_height, double height, const char *style) {
 	bool first = true;
 	double x_before, y_before;
 
@@ -280,7 +280,7 @@ void Osm2PovConverter::drawBuildingWalls(const vector<const XY*> *points, double
 			vector<double> coords;
 
 			coords.push_back(x);
-			coords.push_back(0);
+			coords.push_back(this->pov_writer->metres2unit(min_height));
 			coords.push_back(y);
 
 			coords.push_back(x);
@@ -292,11 +292,11 @@ void Osm2PovConverter::drawBuildingWalls(const vector<const XY*> *points, double
 			coords.push_back(y_before);
 
 			coords.push_back(x_before);
-			coords.push_back(0);
+			coords.push_back(this->pov_writer->metres2unit(min_height));
 			coords.push_back(y_before);
 
 			coords.push_back(x);
-			coords.push_back(0);
+			coords.push_back(this->pov_writer->metres2unit(min_height));
 			coords.push_back(y);
 
 			Polygon3D polygon(0, coords);
@@ -309,17 +309,17 @@ void Osm2PovConverter::drawBuildingWalls(const vector<const XY*> *points, double
 	}
 }
 
-void Osm2PovConverter::drawBuilding(MultiPolygon *multipolygon, double height, const char *style, const char *roof_style) {
+void Osm2PovConverter::drawBuilding(MultiPolygon *multipolygon, double min_height, double height, const char *style, const char *roof_style) {
 	{		//outer walls of building
 		const list<vector<const XY*> > *outer_parts = multipolygon->getOuterParts();
 		for (list<vector<const XY*> >::const_iterator it = outer_parts->begin(); it != outer_parts->end(); it++) {
-			this->drawBuildingWalls(&(*it), height, style);
+			this->drawBuildingWalls(&(*it), min_height, height, style);
 		}
 	}
 	{		//inner walls of building (if building have any)
 		const list<vector<const XY*> > *holes = multipolygon->getHoles();
 		for (list<vector<const XY*> >::const_iterator it = holes->begin(); it != holes->end(); it++) {
-			this->drawBuildingWalls(&(*it), height, style);
+			this->drawBuildingWalls(&(*it), min_height, height, style);
 		}
 	}
 
@@ -327,6 +327,12 @@ void Osm2PovConverter::drawBuilding(MultiPolygon *multipolygon, double height, c
 		vector<Triangle> triangles;
 		multipolygon->convertToTriangles(&triangles);
 		this->pov_writer->writePolygon(multipolygon->getId(), &triangles, height, roof_style);
+	}
+
+	if (min_height != 0) {		//when building isn't at floor, render floor too
+		vector<Triangle> triangles;
+		multipolygon->convertToTriangles(&triangles);
+		this->pov_writer->writePolygon(multipolygon->getId(), &triangles, min_height, style);
 	}
 }
 
@@ -366,9 +372,16 @@ void Osm2PovConverter::drawBuildings(const char *key, const char *value, double 
 			height = readDimension(str);
 			height_defined = true;
 		}
+		double min_height = 0;
+		str = (*it)->getAttribute("min_height");		//building that haven't on floor
+		if (str != NULL) {
+			min_height = atof(str);
+			extra_layer = 0;			//when has building min_height, it's more precise than layer
+		}
 
 		if (building_type == default_building) {
-			if (height > 10 || (*it)->computeAreaSize() > 0.00000008) {	//empirically determined magic number
+			if (height > 10 || min_height != 0
+				|| (*it)->computeAreaSize() > 0.00000008) {	//empirically determined magic number
 				building_type = nonliving_building;
 			}
 		}
@@ -396,7 +409,7 @@ void Osm2PovConverter::drawBuildings(const char *key, const char *value, double 
 				break;
 		}
 
-		this->drawBuilding(*it, height+extra_layer, style[(*it)->getId() % style.size()], (*roof_style)[(*it)->getId() % roof_style->size()]);
+		this->drawBuilding(*it, min_height, height+extra_layer, style[(*it)->getId() % style.size()], (*roof_style)[(*it)->getId() % roof_style->size()]);
 		delete *it;
 	}
 }
@@ -416,6 +429,13 @@ void Osm2PovConverter::drawSpecialBuildings(const char *key, const char *value, 
 		str = (*it)->getAttribute("building:height");
 		if (str == NULL) str = (*it)->getAttribute("height");
 		if (str != NULL) height = readDimension(str);
+		
+		double min_height = 0;
+		str = (*it)->getAttribute("min_height");		//building that haven't on floor
+		if (str != NULL) {
+			min_height = atof(str);
+			extra_layer = 0;			//when has building min_height, it's more precise than layer
+		}
 
 		{
 			stringstream s;
@@ -425,7 +445,7 @@ void Osm2PovConverter::drawSpecialBuildings(const char *key, const char *value, 
 			this->pov_writer->writeComment(s.str().c_str());
 		}
 
-		this->drawBuilding(*it, height+extra_layer, style, roof_style);
+		this->drawBuilding(*it, min_height, height+extra_layer, style, roof_style);
 		delete *it;
 	}
 }

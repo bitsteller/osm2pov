@@ -13,8 +13,8 @@ class Osm2PovConverter {
 	static double readDimension(const char *dimension_text);
 	static double computeWayWidth(const Way *way, double default_width);
 	void drawWay(const vector<const class Node*> *nodes, double width, double height, const char *style, bool including_links, bool links_also_in_margin);
-	void drawBuilding(class MultiPolygon *multipolygon, double height, const char *style, const char *roof_style);
-	void drawBuildingWalls(const vector<const class XY*> *points, double height, const char *style);
+	void drawBuilding(class MultiPolygon *multipolygon, double min_height, double height, const char *style, const char *roof_style);
+	void drawBuildingWalls(const vector<const class XY*> *points, double min_height, double height, const char *style);
 	void drawArea(uint64_t area_id, const vector<const class Node*> *nodes, double height, const char *style);
 
 	public:
