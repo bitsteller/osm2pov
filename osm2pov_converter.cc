@@ -6,6 +6,8 @@
 #include "pov_writer.h"
 #include "primitives.h"
 
+
+
 /*
  * Extracts the height or width from a tag value as meters.
  */
@@ -36,6 +38,74 @@ double Osm2PovConverter::computeWayWidth(const Way *way, double default_width) {
 	}
 	return real_width;
 }
+
+
+
+Osm2PovConverter::BuildingType Osm2PovConverter::getBuildingType(const MultiPolygon *building, double height, double min_height) {		
+	const char *use_str;
+	if (building->getAttribute("building") != "yes")
+	{
+		use_str = building->getAttribute("building");
+	}
+	else {
+		use_str = building->getAttribute("building:use");
+	}
+	
+	BuildingType building_type;
+	
+	
+	//First try to parse use tag, if specified (see http://wiki.openstreetmap.org/wiki/Key:building)
+	if (use_str == "house" 
+		 || use_str == "residential" 
+		 || use_str == "hut") {
+		building_type = BuildingType::living_building;
+	}
+	else if (use_str == "church") {
+		building_type = BuildingType::worship_building;
+	}
+	else if (building->hasAttribute("amenity", "place_of_worship")) {
+		building_type = BuildingType::worship_building;
+	}
+	else if (use_str == "bunker" 
+				|| use_str == "collapsed" 
+				|| use_str == "commercial" 
+				|| use_str == "detached" 
+				|| use_str == "entrance" 
+				|| use_str == "farm" 
+				|| use_str == "garage" 
+				|| use_str == "greenhouse" 
+				|| use_str == "hangar" 
+				|| use_str == "industrial" 
+				|| use_str == "manufacture" 
+				|| use_str == "office" 
+				|| use_str == "public" 
+				|| use_str == "retail" 
+				|| use_str == "roof" 
+				|| use_str == "school" 
+				|| use_str == "service" 
+				|| use_str == "storage_tank" 
+				|| use_str == "terasse" 
+				|| use_str == "transportation" 
+				|| use_str == "train_station" 
+				|| use_str == "university") {
+		building_type = BuildingType::nonliving_building;
+	}
+	else if (building->getAttribute("amenity") != NULL){
+		building_type = BuildingType::nonliving_building;
+	}
+	else {
+		//If nothing found, try to guess by building size		
+		if (height > 10 || min_height != 0
+			|| building->computeAreaSize() > 0.00000008) {	//empirically determined magic number
+			building_type = BuildingType::nonliving_building;
+		}
+		else {
+			building_type = BuildingType::living_building;
+		}
+	}
+	return building_type;
+}
+
 
 void Osm2PovConverter::drawTowers(const char *key, const char *value, double width, double default_height, const char *style) {
 	list<const Node*> nodes;
@@ -350,22 +420,16 @@ void Osm2PovConverter::drawBuildings(const char *key, const char *value, double 
 		if ((*it)->hasAttribute("amenity", "tower")) continue;
 		if ((*it)->hasAttribute("man_made", "chimney")) continue;
 
-		enum {
-			default_building,
-			nonliving_building,
-			worship_building,
-		} building_type = default_building;
 
 		double height = default_height;
-		if ((*it)->hasAttribute("amenity", "place_of_worship"))
-			building_type = worship_building;
-
+		
 		bool height_defined = false;
 		str = (*it)->getAttribute("building:levels");
 		if (str != NULL) {
 			height = 4 + (atof(str)-1) * 3;
 			height_defined = true;
 		}
+		
 		str = (*it)->getAttribute("building:height");
 		if (str == NULL) str = (*it)->getAttribute("height");
 		if (str != NULL) {
@@ -378,13 +442,8 @@ void Osm2PovConverter::drawBuildings(const char *key, const char *value, double 
 			min_height = atof(str);
 			extra_layer = 0;			//when has building min_height, it's more precise than layer
 		}
-
-		if (building_type == default_building) {
-			if (height > 10 || min_height != 0
-				|| (*it)->computeAreaSize() > 0.00000008) {	//empirically determined magic number
-				building_type = nonliving_building;
-			}
-		}
+		
+		BuildingType building_type = getBuildingType((*it), height, min_height);
 
 		{
 			stringstream s;
@@ -396,7 +455,7 @@ void Osm2PovConverter::drawBuildings(const char *key, const char *value, double 
 
 		const vector<const char*> *roof_style;
 		switch (building_type) {
-			case default_building:
+			case living_building:
 				roof_style = &roof_style_living;
 				if (!height_defined) height += (double)((*it)->getId() % 5)/2 - 1;   //building has slightly random height
 				break;

@@ -9,9 +9,15 @@ class Osm2PovConverter {
 	class Primitives *primitives;
 	class PovWriter *pov_writer;
 	PointField point_field;
+	enum BuildingType {
+		living_building,
+		nonliving_building,
+		worship_building,
+	};
 
 	static double readDimension(const char *dimension_text);
 	static double computeWayWidth(const Way *way, double default_width);
+	static BuildingType getBuildingType(const MultiPolygon *building, double height, double min_height);
 	void drawWay(const vector<const class Node*> *nodes, double width, double height, const char *style, bool including_links, bool links_also_in_margin);
 	void drawBuilding(class MultiPolygon *multipolygon, double min_height, double height, const char *style, const char *roof_style);
 	void drawBuildingWalls(const vector<const class XY*> *points, double min_height, double height, const char *style);
