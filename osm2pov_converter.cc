@@ -55,39 +55,39 @@ Osm2PovConverter::BuildingType Osm2PovConverter::getBuildingType(const MultiPoly
 	
 	
 	//First try to parse use tag, if specified (see http://wiki.openstreetmap.org/wiki/Key:building)
-	if (use_str == "house" 
-		 || use_str == "residential" 
-		 || use_str == "hut") {
+	if (use_str.compare("house") == 0 
+		 || use_str.compare("residential") == 0 
+		 || use_str.compare("hut") == 0 ) {
 		building_type = BuildingType::living_building;
 	}
-	else if (use_str == "church") {
+	else if (use_str.compare("church")) {
 		building_type = BuildingType::worship_building;
 	}
 	else if (building->hasAttribute("amenity", "place_of_worship")) {
 		building_type = BuildingType::worship_building;
 	}
-	else if (use_str == "bunker" 
-				|| use_str == "collapsed" 
-				|| use_str == "commercial" 
-				|| use_str == "detached" 
-				|| use_str == "entrance" 
-				|| use_str == "farm" 
-				|| use_str == "garage" 
-				|| use_str == "greenhouse" 
-				|| use_str == "hangar" 
-				|| use_str == "industrial" 
-				|| use_str == "manufacture" 
-				|| use_str == "office" 
-				|| use_str == "public" 
-				|| use_str == "retail" 
-				|| use_str == "roof" 
-				|| use_str == "school" 
-				|| use_str == "service" 
-				|| use_str == "storage_tank" 
-				|| use_str == "terasse" 
-				|| use_str == "transportation" 
-				|| use_str == "train_station" 
-				|| use_str == "university") {
+	else if (use_str.compare("bunker") == 0  
+				|| use_str.compare("collapsed") == 0  
+				|| use_str.compare("commercial") == 0  
+				|| use_str.compare("detached") == 0  
+				|| use_str.compare("entrance") == 0  
+				|| use_str.compare("farm") == 0  
+				|| use_str.compare("garage") == 0  
+				|| use_str.compare("greenhouse") == 0  
+				|| use_str.compare("hangar") == 0  
+				|| use_str.compare("industrial") == 0  
+				|| use_str.compare("manufacture") == 0  
+				|| use_str.compare("office") == 0  
+				|| use_str.compare("public") == 0  
+				|| use_str.compare("retail") == 0  
+				|| use_str.compare("roof") == 0  
+				|| use_str.compare("school") == 0  
+				|| use_str.compare("service") == 0  
+				|| use_str.compare("storage_tank") == 0  
+				|| use_str.compare("terasse") == 0  
+				|| use_str.compare("transportation") == 0  
+				|| use_str.compare("train_station") == 0  
+				|| use_str.compare("university") == 0 ) {
 		building_type = BuildingType::nonliving_building;
 	}
 	else if (building->getAttribute("amenity") != NULL){
