@@ -42,7 +42,7 @@ double Osm2PovConverter::computeWayWidth(const Way *way, double default_width) {
 
 
 Osm2PovConverter::BuildingType Osm2PovConverter::getBuildingType(const MultiPolygon *building, double height, double min_height) {		
-	const char *use_str;
+	string use_str;
 	if (building->getAttribute("building") != "yes")
 	{
 		use_str = building->getAttribute("building");
