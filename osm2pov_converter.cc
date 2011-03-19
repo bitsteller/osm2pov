@@ -60,7 +60,7 @@ Osm2PovConverter::BuildingType Osm2PovConverter::getBuildingType(const MultiPoly
 		 || use_str.compare("hut") == 0 ) {
 		building_type = BuildingType::living_building;
 	}
-	else if (use_str.compare("church")) {
+	else if (use_str.compare("church") == 0) {
 		building_type = BuildingType::worship_building;
 	}
 	else if (building->hasAttribute("amenity", "place_of_worship")) {
