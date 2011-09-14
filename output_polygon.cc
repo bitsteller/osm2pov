@@ -340,26 +340,31 @@ double MultiPolygon::computeAreaSize() const {      //returns area size in undef
 
 const char *MultiPolygon::getAttribute(const char *key) const {
 	assert(this->is_done);
-	if (this->relation != NULL) {
+	if (this->relation != NULL) { //return value from relation
 		const char *value = this->relation->getAttribute(key);
 		if (value != NULL) return value;
 	}
+	const char *value = NULL; //or return value from outer way, if _every_ outer way has same value
 	for (list<const Way*>::const_iterator it = this->outer_ways.begin(); it != this->outer_ways.end(); it++) {
-		const char *value = (*it)->getAttribute(key);
-		if (value != NULL) return value;
+		if ((*it)->getAttribute(key) == NULL || (value != NULL && strcmp(value,(*it)->getAttribute(key)) != 0)) {
+			return NULL;
+		}
+		value = (*it)->getAttribute(key);
 	}
-	return NULL;
+	return value;
 }
 
 bool MultiPolygon::hasAttribute(const char *key, const char *value) const {
 	assert(this->is_done);
-	if (this->relation != NULL) {
+	if (this->relation != NULL) { //return true if relation has the attribute
 		if (this->relation->hasAttribute(key, value)) return true;
 	}
+	bool result = false; //or return true if _every_ outer way has the attribute
 	for (list<const Way*>::const_iterator it = this->outer_ways.begin(); it != this->outer_ways.end(); it++) {
-		if ((*it)->hasAttribute(key, value)) return true;
+		if ((*it)->hasAttribute(key, value)) result = true;
+		if ((*it)->hasAttribute(key, value)==false) return false;
 	}
-	return false;
+	return result;
 }
 
 uint64_t MultiPolygon::getId() const {
