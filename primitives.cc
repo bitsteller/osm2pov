@@ -165,7 +165,7 @@ void Primitives::getMultiPolygonsWithAttribute(list<MultiPolygon*> *output, cons
 							}
 						}
 						multipolygon->setDone();
-						if (multipolygon->isValid()) output->push_back(multipolygon);
+						if (multipolygon->hasAttribute(key, value) && multipolygon->isValid()) output->push_back(multipolygon);
 						else delete multipolygon;
 						goto NEXT_WAY;
 					}

@@ -183,6 +183,7 @@ int main(int argc, const char **argv) {
 	osm2pov_converter.drawWays("waterway", "stream", 2, 0.00013, "river", true, true);
 	osm2pov_converter.drawWays("waterway", "canal", 2.5, 0.00013, "river", true, true);
 	osm2pov_converter.drawWays("waterway", "river", 5, 0.00013, "river", true, true);
+	osm2pov_converter.drawAreas("waterway", "dock", 0.00013, "river");
 	osm2pov_converter.drawAreas("waterway", "riverbank", 0.00013, "river");
 	osm2pov_converter.drawAreas("natural", "water", 0.00013, "river");
 	osm2pov_converter.drawAreas("landuse", "basin", 0.00013, "river");
