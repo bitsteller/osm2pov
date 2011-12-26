@@ -8,12 +8,12 @@ class Polygon3D {
 	size_t points_count;
 	bool is_valid;
 
-	bool addPart(uint64_t area_id, vector<double> &coords);
+	bool addPart(uint64_t area_id, const vector<double> &coords);
 
 	public:
-	Polygon3D(uint64_t area_id, vector<double> &coords);
+	Polygon3D(uint64_t area_id, const vector<double> &coords);
 	bool isValidPolygon() const { return this->is_valid; }
-	void addHole(uint64_t area_id, vector<double> &coords);
+	void addHole(uint64_t area_id, const vector<double> &coords);
 	size_t getPointsCount() const { assert(this->is_valid); return this->points_count; }
 	string getCoordsOutput() const { assert(this->is_valid); return this->coords_output; }
 };

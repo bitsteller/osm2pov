@@ -4,12 +4,12 @@
 #include "point_field.h"
 #include "primitives.h"
 
-Polygon3D::Polygon3D(uint64_t area_id, vector<double> &coords) {
+Polygon3D::Polygon3D(uint64_t area_id, const vector<double> &coords) {
 	this->points_count = 0;
 	this->is_valid = this->addPart(area_id, coords);
 }
 
-bool Polygon3D::addPart(uint64_t area_id, vector<double> &coords) {
+bool Polygon3D::addPart(uint64_t area_id, const vector<double> &coords) {
 	assert(coords.size()%3 == 0);
 
 	stringstream str;
@@ -47,7 +47,7 @@ bool Polygon3D::addPart(uint64_t area_id, vector<double> &coords) {
 	return true;
 }
 
-void Polygon3D::addHole(uint64_t area_id, vector<double> &coords) {
+void Polygon3D::addHole(uint64_t area_id, const vector<double> &coords) {
 	this->addPart(area_id, coords);
 }
 
