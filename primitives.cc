@@ -145,7 +145,10 @@ void Primitives::getMultiPolygonsWithAttribute(list<MultiPolygon*> *output, cons
 			for (vector<const Relation*>::const_iterator it2 = relations->begin(); it2 != relations->end(); it2++) {
 				const char *role = (*it2)->getRoleForId(it->second->getId());
 				if (strcmp(role, "outer") == 0) {
-					if (ids_used_in_relations.find(it->second->getId()) == ids_used_in_relations.end()) {		//isn't used in relation already
+					if (ids_used_in_relations.find(it->second->getId()) != ids_used_in_relations.end()) {
+						goto NEXT_WAY;			//is used in relation already
+					}
+					else {  //isn't used in relation
 						MultiPolygon *multipolygon = new MultiPolygon(*it2, &this->interest_rect);
 						const vector<const PrimitiveRole*> *members = (*it2)->getRelationMembers();
 						for (vector<const PrimitiveRole*>::const_iterator it3 = members->begin(); it3 != members->end(); it3++) {
