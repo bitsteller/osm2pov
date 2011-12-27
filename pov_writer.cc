@@ -5,6 +5,10 @@
 #include "primitives.h"
 
 
+double metres2unit(double metres) {
+	return metres / 60;
+}
+
 PovWriter::PovWriter(const char *filename, const Rect &view_rect, bool fix_size_to_square) {
 	this->view_rect = view_rect;
 
@@ -51,11 +55,11 @@ void PovWriter::writeComment(const char *comment) {
 	this->fs << " // " << comment << endl;
 }
 
-void PovWriter::writeTriangle(uint64_t id, const Triangle *triangle, double height, const char *style) {
+void PovWriter::writeTriangle(uint64_t id, const Triangle &triangle, double height, const char *style) {
 	double x[3], y[3];
 	for (size_t i = 0; i < 3; i++) {
-		x[i] = this->convertLonToCoord(triangle->getX(i));
-		y[i] = this->convertLatToCoord(triangle->getY(i));
+		x[i] = this->convertLonToCoord(triangle.getX(i));
+		y[i] = this->convertLatToCoord(triangle.getY(i));
 	}
 
 	//check if 2 points aren't the same (it's when some points are the same but no side-by-side (this is checked previously))
@@ -72,7 +76,7 @@ void PovWriter::writeTriangle(uint64_t id, const Triangle *triangle, double heig
 	this->fs << "triangle { ";
 
 	for (size_t i = 0; i < 3; i++) {
-		this->fs << (i == 0 ? "<" : ",<") << x[i] << "," << this->metres2unit(height) << "," << y[i] << ">";
+		this->fs << (i == 0 ? "<" : ",<") << x[i] << "," << metres2unit(height) << "," << y[i] << ">";
 	}
 
 	this->fs << " texture { " << style << " } ";
@@ -80,35 +84,35 @@ void PovWriter::writeTriangle(uint64_t id, const Triangle *triangle, double heig
 }
 
 //When all polygons are decomposed into triangles. It is in most cases faster rendering
-void PovWriter::writePolygon(uint64_t id, const vector<Triangle> *triangles, double height, const char *style) {
-	for (vector<Triangle>::const_iterator it = triangles->begin(); it != triangles->end(); it++) {
-		this->writeTriangle(id, &(*it), height, style);
+void PovWriter::writePolygon(uint64_t id, const vector<Triangle> &triangles, double height, const char *style) {
+	for (vector<Triangle>::const_iterator it = triangles.begin(); it != triangles.end(); it++) {
+		this->writeTriangle(id, *it, height, style);
 	}
 }
 
 // !! this is never used (because polygon count is always > 1)
 //next code is only when you (for any reason) want write polygon as polygon primitive, not set of triangles
-void PovWriter::writePolygon(MultiPolygon *polygon, double height, const char *style) {
-	assert(polygon->isValid());
+void PovWriter::writePolygon(const MultiPolygon &polygon, double height, const char *style) {
+	assert(polygon.isValid());
 
 	this->fs << "polygon { ";
-	this->fs << polygon->getPointsCount() << " ";
+	this->fs << polygon.getPointsCount() << " ";
 
 	{
-		const list<vector<const XY*> > *outer_parts = polygon->getOuterParts();
+		const list<vector<const XY*> > *outer_parts = polygon.getOuterParts();
 		bool first = true;
 		for (list<vector<const XY*> >::const_iterator it = outer_parts->begin(); it != outer_parts->end(); it++) {
 			for (vector<const XY*>::const_iterator it2 = it->begin(); it2 != it->end(); it2++) {
-				this->fs << (first ? "<" : ",<") << this->convertLonToCoord((*it2)->x) << "," << this->metres2unit(height) << "," << this->convertLatToCoord((*it2)->y) << ">";
+				this->fs << (first ? "<" : ",<") << this->convertLonToCoord((*it2)->x) << "," << metres2unit(height) << "," << this->convertLatToCoord((*it2)->y) << ">";
 				first = false;
 			}
 		}
 	}
 	{
-		const list<vector<const XY*> > *holes = polygon->getHoles();
+		const list<vector<const XY*> > *holes = polygon.getHoles();
 		for (list<vector<const XY*> >::const_iterator it = holes->begin(); it != holes->end(); it++) {
 			for (vector<const XY*>::const_iterator it2 = it->begin(); it2 != it->end(); it2++) {
-				this->fs << ",<" << this->convertLonToCoord((*it2)->x) << "," << this->metres2unit(height) << "," << this->convertLatToCoord((*it2)->y) << ">";
+				this->fs << ",<" << this->convertLonToCoord((*it2)->x) << "," << metres2unit(height) << "," << this->convertLatToCoord((*it2)->y) << ">";
 			}
 		}
 	}
@@ -117,12 +121,12 @@ void PovWriter::writePolygon(MultiPolygon *polygon, double height, const char *s
 	this->fs << "}" << endl;
 }
 
-void PovWriter::writePolygon(const Polygon3D *polygon, const char *style) {
-	if (!polygon->isValidPolygon()) return;
+void PovWriter::writePolygon(const Polygon3D &polygon, const char *style) {
+	if (!polygon.isValidPolygon()) return;
 
 	this->fs << "polygon { ";
-	this->fs << polygon->getPointsCount() << " ";
-	this->fs << polygon->getCoordsOutput();
+	this->fs << polygon.getPointsCount() << " ";
+	this->fs << polygon.getCoordsOutput();
 	this->fs << " texture { " << style << " } ";
 	this->fs << "}" << endl;
 }

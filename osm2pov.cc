@@ -104,7 +104,7 @@ int main(int argc, const char **argv) {
 	PovWriter pov_writer(argv[2], primitives.getViewRect(), fix_size_to_square);
 	if (!pov_writer.isOpened()) return 1;
 
-	Osm2PovConverter osm2pov_converter(&primitives, &pov_writer);
+	Osm2PovConverter osm2pov_converter(primitives, pov_writer);
 
 	//generating objects
 	osm2pov_converter.drawWaysWithBorder("highway", "motorway", 10, 0.06, "highway", 10, "highway_secondary_border");

@@ -1,6 +1,5 @@
 
-#ifndef PRIMITIVES_H_
-#define PRIMITIVES_H_
+#pragma once
 
 #include <cmath>
 #ifndef M_PI		//under Cygwin M_PI not found (??)
@@ -77,20 +76,20 @@ class Way : public Primitive {
 	void addWayToRelation(const Relation *relation) {
 		this->relations.push_back(relation);
 	}
-	const vector<const Node*> *getNodes() const {
-		return &this->nodes;
+	const vector<const Node*> &getNodes() const {
+		return this->nodes;
 	}
-	const vector<const Relation*> *getRelations() const {
-		return &this->relations;
+	const vector<const Relation*> &getRelations() const {
+		return this->relations;
 	}
 	uint64_t getFirstNodeId() const { return this->nodes.at(0)->getId(); }
 	uint64_t getLastNodeId() const { return this->nodes.at(this->nodes.size()-1)->getId(); }
 };
 
 struct PrimitiveRole {
-	const Primitive *primitive;
+	const Primitive &primitive;
 	string role;
-	PrimitiveRole(const Primitive *primitive, string role) : primitive(primitive), role(role) { }
+	PrimitiveRole(const Primitive &primitive, string role) : primitive(primitive), role(role) { }
 };
 
 class Relation : public Primitive {
@@ -102,18 +101,18 @@ class Relation : public Primitive {
 	virtual ~Relation() {
 		for (vector<const PrimitiveRole*>::iterator it = this->members.begin(); it != this->members.end(); it++) delete *it;
 	}
-	void addMemberToRelation(const Primitive *primitive, const char *role) {
+	void addMemberToRelation(const Primitive &primitive, const char *role) {
 		PrimitiveRole *primitive_role = new PrimitiveRole(primitive, role);
 		this->members.push_back(primitive_role);
 	}
 	const char *getRoleForId(uint64_t id) const {
 		for (vector<const PrimitiveRole*>::const_iterator it = this->members.begin(); it != this->members.end(); it++) {
-			if (id == (*it)->primitive->getId()) return (*it)->role.c_str();
+			if (id == (*it)->primitive.getId()) return (*it)->role.c_str();
 		}
 		assert(false);		//not found
 	}
-	const vector<const PrimitiveRole*> *getRelationMembers() const {
-		return &this->members;
+	const vector<const PrimitiveRole*> &getRelationMembers() const {
+		return this->members;
 	}
 };
 
@@ -187,4 +186,3 @@ class Primitives {
 	void getDisusedAttributes(multimap<size_t,string> *output) const;
 };
 
-#endif /* PRIMITIVES_H_ */

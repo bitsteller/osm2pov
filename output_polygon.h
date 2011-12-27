@@ -1,6 +1,5 @@
 
-#ifndef OUTPUT_POLYGON_H_
-#define OUTPUT_POLYGON_H_
+#pragma once
 
 class Polygon3D {
 	private:
@@ -78,4 +77,3 @@ class MultiPolygon {
 	void convertToTriangles(vector<Triangle> *triangles) const;
 };
 
-#endif /* OUTPUT_POLYGON_H_ */

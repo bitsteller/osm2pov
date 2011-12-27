@@ -153,11 +153,11 @@ static bool AddPolygonToList(const list<const Way*> &ways, list<vector<const XY*
 		list<vector<const Node*> > outer_parts_now;
 
 		{			//insert first way to outer parts
-			const vector<const Node*> *nodes = (*remaining_ways.begin())->getNodes();
+			const vector<const Node*> &nodes = (*remaining_ways.begin())->getNodes();
 			outer_parts_now.push_back(vector<const Node*>());
 			vector<const Node*> *outer_part = &(*outer_parts_now.rbegin());
-			for (size_t i = 0; i < nodes->size(); i++)
-				outer_part->push_back((*nodes)[i]);
+			for (size_t i = 0; i < nodes.size(); i++)
+				outer_part->push_back(nodes[i]);
 			remaining_ways.erase(remaining_ways.begin());
 		}
 
@@ -167,18 +167,18 @@ static bool AddPolygonToList(const list<const Way*> &ways, list<vector<const XY*
 				//may I join it with some existing way?
 			for (list<vector<const Node*> >::iterator it2 = outer_parts_now.begin(); it2 != outer_parts_now.end(); it2++) {
 				uint64_t last_id = (*it2->rbegin())->getId();
-				const vector<const Node*> *nodes = (*it)->getNodes();
+				const vector<const Node*> &nodes = (*it)->getNodes();
 
-				if (last_id == (*nodes)[0]->getId()) {			//way continues on previous in normal order
-					for (size_t i = 1; i < nodes->size(); i++)
-						it2->push_back((*nodes)[i]);
+				if (last_id == nodes[0]->getId()) {			//way continues on previous in normal order
+					for (size_t i = 1; i < nodes.size(); i++)
+						it2->push_back(nodes[i]);
 
 					remaining_ways.erase(it);
 					goto NEW_WAY_PROBING;
 				}
-				else if (last_id == (*nodes)[nodes->size()-1]->getId()) {			//the same loop in reverse order
-					for (size_t i = nodes->size()-2; true; i--) {
-						it2->push_back((*nodes)[i]);
+				else if (last_id == nodes[nodes.size()-1]->getId()) {			//the same loop in reverse order
+					for (size_t i = nodes.size()-2; true; i--) {
+						it2->push_back(nodes[i]);
 						if (i == 0) break;
 					}
 					remaining_ways.erase(it);

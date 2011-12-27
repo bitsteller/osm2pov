@@ -108,20 +108,20 @@ void Primitives::getMultiPolygonsWithAttribute(list<MultiPolygon*> *output, cons
 		const char *value_now = it->second->getAttribute(key);
 		if (value_now != NULL && (value == NULL || strcmp(value, value_now) == 0)) {
 			MultiPolygon *multipolygon = new MultiPolygon(it->second, &this->interest_rect);
-			const vector<const PrimitiveRole*> *members = it->second->getRelationMembers();
+			const vector<const PrimitiveRole*> &members = it->second->getRelationMembers();
 
-			for (vector<const PrimitiveRole*>::const_iterator it2 = members->begin(); it2 != members->end(); it2++) {
+			for (vector<const PrimitiveRole*>::const_iterator it2 = members.begin(); it2 != members.end(); it2++) {
 				if ((*it2)->role == "outer") {
-					const Way *way = dynamic_cast<const Way*>((*it2)->primitive);
-					if (way == NULL) cerr << "Primitive with id " << (*it2)->primitive->getId() << " has role=outer and isn't way, ignoring." << endl;
+					const Way *way = dynamic_cast<const Way*>(&(*it2)->primitive);
+					if (way == NULL) cerr << "Primitive with id " << (*it2)->primitive.getId() << " has role=outer and isn't way, ignoring." << endl;
 					else {
 						multipolygon->addOuterPart(way);
-						ids_used_in_relations.insert((*it2)->primitive->getId());
+						ids_used_in_relations.insert((*it2)->primitive.getId());
 					}
 				}
 				else if ((*it2)->role == "inner") {
-					const Way *way = dynamic_cast<const Way*>((*it2)->primitive);
-					if (way == NULL) cerr << "Primitive with id " << (*it2)->primitive->getId() << " has role=inner and isn't way, ignoring." << endl;
+					const Way *way = dynamic_cast<const Way*>(&(*it2)->primitive);
+					if (way == NULL) cerr << "Primitive with id " << (*it2)->primitive.getId() << " has role=inner and isn't way, ignoring." << endl;
 					else multipolygon->addHole(way);
 				}
 			}
@@ -140,9 +140,9 @@ void Primitives::getMultiPolygonsWithAttribute(list<MultiPolygon*> *output, cons
 	for (unordered_map<uint64_t,Way*>::const_iterator it = this->ways.begin(); it != this->ways.end(); it++) {
 		const char *value_now = it->second->getAttribute(key);
 		if (value_now != NULL && (value == NULL || strcmp(value, value_now) == 0)) {
-			const vector<const Relation*> *relations = it->second->getRelations();
+			const vector<const Relation*> &relations = it->second->getRelations();
 
-			for (vector<const Relation*>::const_iterator it2 = relations->begin(); it2 != relations->end(); it2++) {
+			for (vector<const Relation*>::const_iterator it2 = relations.begin(); it2 != relations.end(); it2++) {
 				const char *role = (*it2)->getRoleForId(it->second->getId());
 				if (strcmp(role, "outer") == 0) {
 					if (ids_used_in_relations.find(it->second->getId()) != ids_used_in_relations.end()) {
@@ -150,19 +150,19 @@ void Primitives::getMultiPolygonsWithAttribute(list<MultiPolygon*> *output, cons
 					}
 					else {  //isn't used in relation
 						MultiPolygon *multipolygon = new MultiPolygon(*it2, &this->interest_rect);
-						const vector<const PrimitiveRole*> *members = (*it2)->getRelationMembers();
-						for (vector<const PrimitiveRole*>::const_iterator it3 = members->begin(); it3 != members->end(); it3++) {
+						const vector<const PrimitiveRole*> &members = (*it2)->getRelationMembers();
+						for (vector<const PrimitiveRole*>::const_iterator it3 = members.begin(); it3 != members.end(); it3++) {
 							if ((*it3)->role == "outer") {		//exist more outer ways for this polygon
-								const Way *way = dynamic_cast<const Way*>((*it3)->primitive);
+								const Way *way = dynamic_cast<const Way*>(&(*it3)->primitive);
 								if (way == NULL) cerr << "Outer element other than way in relation " << (*it2)->getId() << ", ignoring." << endl;
-								else if ((*it3)->primitive->getId() < it->second->getId()) {		//I make it only once; when processing way with lowest id
+								else if ((*it3)->primitive.getId() < it->second->getId()) {		//I make it only once; when processing way with lowest id
 									delete multipolygon;
 									goto NEXT_WAY;
 								}
 								else multipolygon->addOuterPart(way);
 							}
 							else if ((*it3)->role == "inner") {
-								const Way *way = dynamic_cast<const Way*>((*it3)->primitive);
+								const Way *way = dynamic_cast<const Way*>(&(*it3)->primitive);
 								if (way == NULL) cerr << "Inner element other than way in relation " << (*it2)->getId() << ", ignoring." << endl;
 								else multipolygon->addHole(way);
 							}
@@ -364,9 +364,11 @@ void XmlStartElement(void *user_data, const char *name, const char **attributes)
 				if (!is_way) primitive = data->primitives->getNode(member_id);
 				else {
 					primitive = data->primitives->getWay(member_id);
-					if (primitive != NULL) dynamic_cast<Way*>(primitive)->addWayToRelation(dynamic_cast<Relation*>(data->current_primitive));
+					if (primitive != NULL)
+						dynamic_cast<Way*>(primitive)->addWayToRelation(dynamic_cast<Relation*>(data->current_primitive));
 				}
-				if (primitive != NULL) dynamic_cast<Relation*>(data->current_primitive)->addMemberToRelation(primitive, role);
+				if (primitive != NULL)
+					dynamic_cast<Relation*>(data->current_primitive)->addMemberToRelation(*primitive, role);
 			}
 			else cerr << "Found <member> with no mandatory fields!" << endl;
 		}
