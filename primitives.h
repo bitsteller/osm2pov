@@ -151,7 +151,7 @@ class Primitives {
 	public:
 	Primitives();
 	~Primitives();
-	void setBoundsByXY(size_t tile_x, size_t tile_y);
+	void setBoundsByXY(int tile_x, int tile_y);
 	void setIgnoredAttribute(const char *key, const char *value);
 	bool isAttributeIgnored(const char *key, const char *value) const;
 	void setLightlyIgnoredAttribute(const char *key, const char *value);

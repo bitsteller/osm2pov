@@ -51,11 +51,8 @@ void Polygon3D::addHole(uint64_t area_id, const vector<double> &coords) {
 	this->addPart(area_id, coords);
 }
 
-MultiPolygon::MultiPolygon(const Relation *relation, const Rect *interest_rect) {
-	this->is_done = false;
-	this->is_valid = false;
-	this->relation = relation;
-	this->interest_rect = interest_rect;
+MultiPolygon::MultiPolygon(const Relation *relation, const Rect &interest_rect)
+ : is_valid(false), is_done(false), relation(relation), interest_rect(interest_rect) {
 }
 
 MultiPolygon::~MultiPolygon() {
@@ -74,18 +71,18 @@ MultiPolygon::~MultiPolygon() {
 // -1 0 1  1 1 1  Return direction number of point from rectange. If point is in rectangle, then it returns zeros,
 // -1 0 1  0 0 0  otherwise numbers from schema.
 // -1 0 1 -1-1-1
-static void GetDirectionOfPointFromRectangle(double x, double y, const Rect *rect, int *output_horiz, int *output_vert) {
-	if (x < rect->minlon) *output_horiz = -1;
-	else if (x > rect->maxlon) *output_horiz = 1;
+static void GetDirectionOfPointFromRectangle(double x, double y, const Rect &rect, int *output_horiz, int *output_vert) {
+	if (x < rect.minlon) *output_horiz = -1;
+	else if (x > rect.maxlon) *output_horiz = 1;
 	else *output_horiz = 0;
 
-	if (y < rect->minlat) *output_vert = -1;
-	else if (y > rect->maxlat) *output_vert = 1;
+	if (y < rect.minlat) *output_vert = -1;
+	else if (y > rect.maxlat) *output_vert = 1;
 	else *output_vert = 0;
 }
 
-static void RemoveUnusedNodesOutsideOfRectangle(vector<const XY*> *nodes, const Rect *interest_rect) {
-	assert(nodes->size() >= 4);
+static void RemoveUnusedNodesOutsideOfRectangle(vector<const XY*> *nodes, const Rect &interest_rect) {
+	assert(nodes->size() >= 4);  //min. 3 points (first and last are the same)
 
 	int horiz, vert;
 	int prev_horiz, prev_vert;
@@ -133,17 +130,17 @@ static void RemoveUnusedNodesOutsideOfRectangle(vector<const XY*> *nodes, const 
 	}
 }
 
-static double ComputeArea(const vector<const XY*> *polygon) {
+static double ComputeArea(const vector<const XY*> &polygon) {
 	double result = 0.0f;
 
-	for (size_t p = polygon->size() - 1, q = 0; q < polygon->size(); p = q++) {
-		result += (*polygon)[p]->x * (*polygon)[q]->y - (*polygon)[q]->x * (*polygon)[p]->y;
+	for (size_t p = polygon.size() - 1, q = 0; q < polygon.size(); p = q++) {
+		result += polygon[p]->x * polygon[q]->y - polygon[q]->x * polygon[p]->y;
 	}
 
 	return result * 0.5f;
 }
 
-static bool AddPolygonToList(const list<const Way*> &ways, list<vector<const XY*> > *output_list, const Rect *interest_rect) {
+static bool AddPolygonToList(const list<const Way*> &ways, list<vector<const XY*> > *output_list, const Rect &interest_rect) {
 	assert(!ways.empty());
 
 	list<const Way*> remaining_ways = ways;
@@ -190,7 +187,7 @@ static bool AddPolygonToList(const list<const Way*> &ways, list<vector<const XY*
 				  //now fix list of nodes from duplicates, eventually reverse to clockwise order
 		for (list<vector<const Node*> >::const_iterator it = outer_parts_now.begin(); it != outer_parts_now.end(); it++) {
 			output_list->push_back(vector<const XY*>());
-			vector<const XY*> *output_part = &(*output_list->rbegin());
+			vector<const XY*> &output_part = *output_list->rbegin();
 			size_t count_of_two_same_points = 0;
 
 			for (size_t i = 0; i < it->size(); i++) {
@@ -200,38 +197,38 @@ static bool AddPolygonToList(const list<const Way*> &ways, list<vector<const XY*
 				if (i > 0 && x == (*it)[i-1]->getLon() && y == (*it)[i-1]->getLat()) {
 					count_of_two_same_points++;		//two same points
 				}
-				else output_part->push_back(new XY(x, y));
+				else output_part.push_back(new XY(x, y));
 			}
 
 			if (count_of_two_same_points > 0) cerr << "Polygon (way or relation of ways) with way with id " << (*ways.begin())->getId() << " has " << count_of_two_same_points << " duplicites (two same nodes (or nodes with the same coords) next to other)." << endl;
 
-			if (output_part->size() >= 2 &&
-				((*output_part)[0]->x != (*output_part)[output_part->size()-1]->x || (*output_part)[0]->y != (*output_part)[output_part->size()-1]->y)) {
+			if (output_part.size() >= 2 &&
+				(output_part[0]->x != output_part[output_part.size()-1]->x || output_part[0]->y != output_part[output_part.size()-1]->y)) {
 
-				output_part->push_back(new XY((*output_part)[0]->x, (*output_part)[0]->y));
+				output_part.push_back(new XY(output_part[0]->x, output_part[0]->y));
 				cerr << "Polygon (way or relation of ways) with way with id " << (*ways.begin())->getId() << " isn't closed, closing." << endl;
 			}
 
 			bool success = true;
 
-			if (output_part->size() < 3+1) {
+			if (output_part.size() < 3+1) {
 				cerr << "Polygon (way or relation of ways) with way with id " << (*ways.begin())->getId() << " has only " << (output_list->size()-1) << " different points, ignore it." << endl;
 				success = false;
 			}
 			else {
-				RemoveUnusedNodesOutsideOfRectangle(output_part, interest_rect);
+				RemoveUnusedNodesOutsideOfRectangle(&output_part, interest_rect);
 
-				if (output_part->size() < 3+1) {
+				if (output_part.size() < 3+1) {
 					success = false;
 				}
 				else {
 					// Check if points are in clockwise order
 					if (ComputeArea(output_part) > 0) {
 						//it's very often cerr << "Polygon (way or relation of ways) with way with id " << (*ways.begin())->getId() << " is oriented counterclockwise, turn it clockwise." << endl;
-						for (size_t i = 0; i < output_part->size()/2; i++) {
-							const XY *tmp = (*output_part)[i];
-							(*output_part)[i] = (*output_part)[output_part->size()-1-i];
-							(*output_part)[output_part->size()-1-i] = tmp;
+						for (size_t i = 0; i < output_part.size()/2; i++) {
+							const XY *tmp = output_part[i];
+							output_part[i] = output_part[output_part.size()-1-i];
+							output_part[output_part.size()-1-i] = tmp;
 						}
 					}
 
@@ -240,7 +237,7 @@ static bool AddPolygonToList(const list<const Way*> &ways, list<vector<const XY*
 			}
 
 			if (!success) {
-				for (vector<const XY*>::const_iterator it = output_part->begin(); it != output_part->end(); it++) {
+				for (vector<const XY*>::const_iterator it = output_part.begin(); it != output_part.end(); it++) {
 					delete *it;
 				}
 				output_list->pop_back();
@@ -329,10 +326,10 @@ double MultiPolygon::computeAreaSize() const {      //returns area size in undef
     double area_size = 0;
 
     for (list<vector<const XY*> >::const_iterator it = this->outer_parts.begin(); it != this->outer_parts.end(); it++) {
-    	area_size += -ComputeArea(&(*it));
+    	area_size += -ComputeArea(*it);
     }
     for (list<vector<const XY*> >::const_iterator it = this->holes.begin(); it != this->holes.end(); it++) {
-        area_size -= -ComputeArea(&(*it));
+        area_size -= -ComputeArea(*it);
     }
 
     return area_size;

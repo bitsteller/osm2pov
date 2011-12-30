@@ -56,10 +56,10 @@ class MultiPolygon {
 	list<const Way*> outer_ways;
 	list<vector<const XY*> > holes;
 	const class Relation *relation;  //NULL if isn't in any relation
-	const class Rect *interest_rect;
+	const class Rect &interest_rect;
 
 	public:
-	MultiPolygon(const Relation *relation, const Rect *interest_rect);
+	MultiPolygon(const Relation *relation, const Rect &interest_rect);
 	~MultiPolygon();
 	bool isValid() const { assert(this->is_done); return this->is_valid; }
 	bool isDone() const { return this->is_valid; }

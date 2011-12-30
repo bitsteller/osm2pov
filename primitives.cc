@@ -28,7 +28,7 @@ void Primitives::setInterestRectByViewRect() {
     this->interest_rect.enlargeByPercent(5);
 }
 
-void Primitives::setBoundsByXY(size_t tile_x, size_t tile_y) {
+void Primitives::setBoundsByXY(int tile_x, int tile_y) {
 	this->bounds_set_by_x_y = true;
 	this->view_rect.minlat = this->halftiley2lat(tile_y+1, 12);
 	this->view_rect.maxlat = this->halftiley2lat(tile_y, 12);
@@ -107,7 +107,7 @@ void Primitives::getMultiPolygonsWithAttribute(list<MultiPolygon*> *output, cons
 	for (unordered_map<uint64_t,Relation*>::const_iterator it = this->relations.begin(); it != this->relations.end(); it++) {
 		const char *value_now = it->second->getAttribute(key);
 		if (value_now != NULL && (value == NULL || strcmp(value, value_now) == 0)) {
-			MultiPolygon *multipolygon = new MultiPolygon(it->second, &this->interest_rect);
+			MultiPolygon *multipolygon = new MultiPolygon(it->second, this->interest_rect);
 			const vector<const PrimitiveRole*> &members = it->second->getRelationMembers();
 
 			for (vector<const PrimitiveRole*>::const_iterator it2 = members.begin(); it2 != members.end(); it2++) {
@@ -149,7 +149,7 @@ void Primitives::getMultiPolygonsWithAttribute(list<MultiPolygon*> *output, cons
 						goto NEXT_WAY;			//is used in relation already
 					}
 					else {  //isn't used in relation
-						MultiPolygon *multipolygon = new MultiPolygon(*it2, &this->interest_rect);
+						MultiPolygon *multipolygon = new MultiPolygon(*it2, this->interest_rect);
 						const vector<const PrimitiveRole*> &members = (*it2)->getRelationMembers();
 						for (vector<const PrimitiveRole*>::const_iterator it3 = members.begin(); it3 != members.end(); it3++) {
 							if ((*it3)->role == "outer") {		//exist more outer ways for this polygon
@@ -185,7 +185,7 @@ void Primitives::getMultiPolygonsWithAttribute(list<MultiPolygon*> *output, cons
 */			}
 
 			//isn't in any relation, so add as common way
-			MultiPolygon *multipolygon = new MultiPolygon(NULL, &this->interest_rect);
+			MultiPolygon *multipolygon = new MultiPolygon(NULL, this->interest_rect);
 			multipolygon->addOuterPart(it->second);
 			multipolygon->setDone();
 			if (multipolygon->isValid()) output->push_back(multipolygon);
