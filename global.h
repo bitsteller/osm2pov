@@ -20,3 +20,5 @@
 using namespace std;
 
 #define COMP_PRECISION 0.000000001
+
+extern bool g_quiet_mode;

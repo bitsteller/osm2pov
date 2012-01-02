@@ -17,26 +17,45 @@
 #include "pov_writer.h"
 #include "primitives.h"
 
+bool g_quiet_mode = false;
+
+static void PrintHelpAndExit() {
+	cout << "Osm2Pov " << VERSION;
+	cout << "\tAuthor Aleš Janda | See http://osm.kyblsoft.cz/3dmapa/info for details" << endl << endl;
+	cout << "Using:\tosm2pov [-q] input.osm output.pov [X Y]" << endl;
+	cout << "\t-q means \"quiet\" - suppress common errors and no standard output" << endl << endl;
+	cout << "By default, area is computed from OSM file. If you can use it for render part of bigger map, set X and Y parameters. These are coords of tiles of zoom 12, where Y is divided by 2." << endl;
+	cout << "Currently, zoom of output model (and image) is always the same." << endl;
+	exit(1);
+}
 
 int main(int argc, const char **argv) {
-	if (argc != 3 && argc != 5) {
-		cout << "Osm2Pov " << VERSION;
-		cout << "\tAuthor Aleš Janda | See http://osm.kyblsoft.cz/3dmapa/info for details" << endl << endl;
-		cout << "Using:\t" << argv[0] << " input.osm output.pov [X Y]" << endl << endl;
-		cout << "By default, area is computed from OSM file. If you can use it for render part of bigger map, set X and Y parameters. These are coords of tiles of zoom 12, where Y is divided by 2." << endl;
-		cout << "Currently, zoom of output model (and image) is always the same." << endl;
-		return 1;
+	int argc_i = 1;
+	if (argc_i >= argc) PrintHelpAndExit();
+	if (strcmp(argv[argc_i], "-q") == 0) {
+		g_quiet_mode = true;
+		argc_i++;
+		if (argc_i >= argc) PrintHelpAndExit();
 	}
+	const char *input_filename = argv[argc_i++];
+	if (argc_i >= argc) PrintHelpAndExit();
+	const char *output_filename = argv[argc_i++];
 
 	Primitives primitives;
 	bool fix_size_to_square = true;
 
-	if (argc == 5) {
-		primitives.setBoundsByXY(atol(argv[3]), atol(argv[4]));
+	if (argc_i+2 == argc) {
+		const int x = atoi(argv[argc_i++]);
+		const int y = atoi(argv[argc_i++]);
+
+		primitives.setBoundsByXY(x, y);
 		fix_size_to_square = false;
 	}
+	else if (argc_i != argc)
+		PrintHelpAndExit();
 
-	cout << "Loading input file" << endl;
+
+	if (!g_quiet_mode) cout << "Loading input file" << endl;
 
 	//setting attributes that are ignored when read OSM file. These attributes will not used (for memory saving)
 	primitives.setIgnoredAttribute("addr:city", NULL);
@@ -98,10 +117,10 @@ int main(int argc, const char **argv) {
 	primitives.setLightlyIgnoredAttribute("wood", NULL);
 
 	//loading from file
-	if (!primitives.loadFromXml(argv[1])) return 1;
+	if (!primitives.loadFromXml(input_filename)) return 1;
 
-	cout << "Writing POV file" << endl;
-	PovWriter pov_writer(argv[2], primitives.getViewRect(), fix_size_to_square);
+	if (!g_quiet_mode) cout << "Writing POV file" << endl;
+	PovWriter pov_writer(output_filename, primitives.getViewRect(), fix_size_to_square);
 	if (!pov_writer.isOpened()) return 1;
 
 	Osm2PovConverter osm2pov_converter(primitives, pov_writer);
@@ -200,5 +219,5 @@ int main(int argc, const char **argv) {
 		}
 	}
 */
-	cout << "Done." << endl;
+	if (!g_quiet_mode) cout << "Done." << endl;
 }

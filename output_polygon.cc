@@ -28,7 +28,8 @@ bool Polygon3D::addPart(uint64_t area_id, const vector<double> &coords) {
 		str << ",<" << coords[i] << "," << coords[i+1] << "," << coords[i+2] << ">";
 		area_points++;
 	}
-	if (at_least_two_same_points) cerr << "Polygon with id " << area_id << " has at least two same points next to other." << endl;
+	if (at_least_two_same_points && !g_quiet_mode)
+		cerr << "Polygon with id " << area_id << " has at least two same points next to other." << endl;
 
 	if (coords.size() >= 6 && (coords[0] != coords[coords.size()-3] || coords[1] != coords[coords.size()-2] || coords[2] != coords[coords.size()-1])) {
 		str << ",<" << coords[0] << "," << coords[1] << "," << coords[2] << ">";
@@ -200,7 +201,8 @@ static bool AddPolygonToList(const list<const Way*> &ways, list<vector<const XY*
 				else output_part.push_back(new XY(x, y));
 			}
 
-			if (count_of_two_same_points > 0) cerr << "Polygon (way or relation of ways) with way with id " << (*ways.begin())->getId() << " has " << count_of_two_same_points << " duplicites (two same nodes (or nodes with the same coords) next to other)." << endl;
+			if (count_of_two_same_points > 0 && !g_quiet_mode)
+				cerr << "Polygon (way or relation of ways) with way with id " << (*ways.begin())->getId() << " has " << count_of_two_same_points << " duplicites (two same nodes (or nodes with the same coords) next to other)." << endl;
 
 			if (output_part.size() >= 2 &&
 				(output_part[0]->x != output_part[output_part.size()-1]->x || output_part[0]->y != output_part[output_part.size()-1]->y)) {

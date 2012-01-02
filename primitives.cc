@@ -480,8 +480,10 @@ bool Primitives::loadFromXml(const char *filename) {
 		this->setInterestRectByViewRect();
 	}
 
-	cout << "Area: LAT " << this->view_rect.minlat << " - " << this->view_rect.maxlat << ", LON " << this->view_rect.minlon << " - " << this->view_rect.maxlon << endl;
-	cout << "Nodes: " << this->nodes.size() << " Ways: " << this->ways.size() << " Relations: " << this->relations.size() << endl;
+	if (!g_quiet_mode) {
+		cout << "Area: LAT " << this->view_rect.minlat << " - " << this->view_rect.maxlat << ", LON " << this->view_rect.minlon << " - " << this->view_rect.maxlon << endl;
+		cout << "Nodes: " << this->nodes.size() << " Ways: " << this->ways.size() << " Relations: " << this->relations.size() << endl;
+	}
 
 	return success;
 }

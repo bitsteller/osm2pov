@@ -6,7 +6,6 @@
 
 void PointField::addPoint(double x, double y, double distance) {
 	distance /= 2000;
-	map<double,map<double,double> >::const_iterator x_it = this->field.find(x);
 	this->field[x].insert(make_pair(y, distance));	//TODO magic constant, unify units!
 
 	if (distance > this->max_used_distance)
