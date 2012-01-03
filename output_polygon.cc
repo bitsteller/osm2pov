@@ -268,58 +268,7 @@ void MultiPolygon::setDone() {
 	assert(!this->is_done);
 	assert(!this->outer_ways.empty());
 
-	if (this->outer_ways.size() > 1) {			//if there more than 1 outer way, try to merge it together
-		list<const Way*> remaining_ways = this->outer_ways;
-		uint64_t first_id = (*remaining_ways.begin())->getFirstNodeId();
-		uint64_t last_id = (*remaining_ways.begin())->getLastNodeId();
-		list<const Way*> final_ways;
-		final_ways.push_back(*remaining_ways.begin());
-		remaining_ways.erase(remaining_ways.begin());
-
-		while (!remaining_ways.empty()) {		//I have first way, now find remaining ones
-			for (list<const Way*>::iterator it = remaining_ways.begin(); it != remaining_ways.end(); it++) {
-				const uint64_t first_id_now = (*it)->getFirstNodeId();
-				const uint64_t last_id_now = (*it)->getLastNodeId();
-
-				if (first_id_now == last_id) {		//append to end, normal order
-					last_id = last_id_now;
-					final_ways.push_back(*it);
-					remaining_ways.erase(it);
-					goto WAY_FOUND;
-				}
-				if (last_id_now == last_id) {		//append to end, reverse order
-					last_id = first_id_now;
-					final_ways.push_back(*it);
-					remaining_ways.erase(it);
-					goto WAY_FOUND;
-				}
-				if (last_id_now == first_id) {		//append to start, normal order
-					first_id = first_id_now;
-					final_ways.push_front(*it);
-					remaining_ways.erase(it);
-					goto WAY_FOUND;
-				}
-				if (first_id_now == first_id) {		//append to start, reverse order
-					first_id = last_id_now;
-					final_ways.push_front(*it);
-					remaining_ways.erase(it);
-					goto WAY_FOUND;
-				}
-			}
-			goto ERROR;
-
-			WAY_FOUND:;
-		}
-		if (first_id != last_id) {
-			ERROR:
-			cerr << "Way in relation with start way with id " << (*this->outer_ways.begin())->getId() << " cannot be joined in all nodes; cannot join in nodes " << first_id << " and " << last_id << "." << endl;
-		}
-
-		this->is_valid = AddPolygonToList(final_ways, &this->outer_parts, this->interest_rect);
-	}
-	else {
-		this->is_valid = AddPolygonToList(this->outer_ways, &this->outer_parts, this->interest_rect);
-	}
+	this->is_valid = AddPolygonToList(this->outer_ways, &this->outer_parts, this->interest_rect);
 
 	this->is_done = true;
 }
