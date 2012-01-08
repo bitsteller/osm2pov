@@ -320,21 +320,21 @@ void Osm2PovConverter::drawObjects(const char *key, const char *value, const cha
 	}
 }
 
-void Osm2PovConverter::drawBuildingWalls(const vector<const XY*> &points, double min_height, double height, const char *style) {
+void Osm2PovConverter::drawBuildingWalls(const vector<XY> &points, double min_height, double height, const char *style) {
 	bool first = true;
 	double x_before, y_before;
 
 	double lon_before, lat_before;
-	for (vector<const XY*>::const_iterator it = points.begin(); it != points.end(); it++) {
-		double x = this->pov_writer.convertLonToCoord((*it)->x);
-		double y = this->pov_writer.convertLatToCoord((*it)->y);
+	for (vector<XY>::const_iterator it = points.begin(); it != points.end(); it++) {
+		double x = this->pov_writer.convertLonToCoord(it->x);
+		double y = this->pov_writer.convertLatToCoord(it->y);
 
 		if (first) {
-			this->point_field.addPoint((*it)->x, (*it)->y, metres2unit(3.5)*2);
+			this->point_field.addPoint(it->x, it->y, metres2unit(3.5)*2);
 			first = false;
 		}
 		else {
-			this->point_field.addPointsInDistance(lon_before, lat_before, (*it)->x, (*it)->y, metres2unit(3.5)*2);
+			this->point_field.addPointsInDistance(lon_before, lat_before, it->x, it->y, metres2unit(3.5)*2);
 
 			vector<double> coords;
 
@@ -364,20 +364,20 @@ void Osm2PovConverter::drawBuildingWalls(const vector<const XY*> &points, double
 		}
 
 		x_before = x; y_before = y;
-		lon_before = (*it)->x; lat_before = (*it)->y;
+		lon_before = it->x; lat_before = it->y;
 	}
 }
 
 void Osm2PovConverter::drawBuilding(const MultiPolygon &multipolygon, double min_height, double height, const char *style, const char *roof_style) {
 	{		//outer walls of building
-		const list<vector<const XY*> > *outer_parts = multipolygon.getOuterParts();
-		for (list<vector<const XY*> >::const_iterator it = outer_parts->begin(); it != outer_parts->end(); it++) {
+		const list<vector<XY> > &outer_parts = multipolygon.getOuterParts();
+		for (list<vector<XY> >::const_iterator it = outer_parts.begin(); it != outer_parts.end(); it++) {
 			this->drawBuildingWalls(*it, min_height, height, style);
 		}
 	}
 	{		//inner walls of building (if building have any)
-		const list<vector<const XY*> > *holes = multipolygon.getHoles();
-		for (list<vector<const XY*> >::const_iterator it = holes->begin(); it != holes->end(); it++) {
+		const list<vector<XY> > &holes = multipolygon.getHoles();
+		for (list<vector<XY> >::const_iterator it = holes.begin(); it != holes.end(); it++) {
 			this->drawBuildingWalls(*it, min_height, height, style);
 		}
 	}

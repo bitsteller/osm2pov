@@ -19,7 +19,7 @@ class Osm2PovConverter {
 	static BuildingType getBuildingType(const MultiPolygon &building, double height, double min_height);
 	void drawWay(const vector<const class Node*> &nodes, double width, double height, const char *style, bool including_links, bool links_also_in_margin);
 	void drawBuilding(const class MultiPolygon &multipolygon, double min_height, double height, const char *style, const char *roof_style);
-	void drawBuildingWalls(const vector<const class XY*> &points, double min_height, double height, const char *style);
+	void drawBuildingWalls(const vector<class XY> &points, double min_height, double height, const char *style);
 	void drawArea(uint64_t area_id, const vector<const class Node*> &nodes, double height, const char *style);
 
 	public:

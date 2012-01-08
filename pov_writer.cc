@@ -99,20 +99,20 @@ void PovWriter::writePolygon(const MultiPolygon &polygon, double height, const c
 	this->fs << polygon.getPointsCount() << " ";
 
 	{
-		const list<vector<const XY*> > *outer_parts = polygon.getOuterParts();
+		const list<vector<XY> > &outer_parts = polygon.getOuterParts();
 		bool first = true;
-		for (list<vector<const XY*> >::const_iterator it = outer_parts->begin(); it != outer_parts->end(); it++) {
-			for (vector<const XY*>::const_iterator it2 = it->begin(); it2 != it->end(); it2++) {
-				this->fs << (first ? "<" : ",<") << this->convertLonToCoord((*it2)->x) << "," << metres2unit(height) << "," << this->convertLatToCoord((*it2)->y) << ">";
+		for (list<vector<XY> >::const_iterator it = outer_parts.begin(); it != outer_parts.end(); it++) {
+			for (vector<XY>::const_iterator it2 = it->begin(); it2 != it->end(); it2++) {
+				this->fs << (first ? "<" : ",<") << this->convertLonToCoord(it2->x) << "," << metres2unit(height) << "," << this->convertLatToCoord(it2->y) << ">";
 				first = false;
 			}
 		}
 	}
 	{
-		const list<vector<const XY*> > *holes = polygon.getHoles();
-		for (list<vector<const XY*> >::const_iterator it = holes->begin(); it != holes->end(); it++) {
-			for (vector<const XY*>::const_iterator it2 = it->begin(); it2 != it->end(); it2++) {
-				this->fs << ",<" << this->convertLonToCoord((*it2)->x) << "," << metres2unit(height) << "," << this->convertLatToCoord((*it2)->y) << ">";
+		const list<vector<XY> > &holes = polygon.getHoles();
+		for (list<vector<XY> >::const_iterator it = holes.begin(); it != holes.end(); it++) {
+			for (vector<XY>::const_iterator it2 = it->begin(); it2 != it->end(); it2++) {
+				this->fs << ",<" << this->convertLonToCoord(it2->x) << "," << metres2unit(height) << "," << this->convertLatToCoord(it2->y) << ">";
 			}
 		}
 	}
