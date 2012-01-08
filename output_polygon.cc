@@ -133,14 +133,14 @@ static bool AddPolygonToList(const list<const Way*> &ways, list<vector<XY> > *ou
 	bool success_overall = false;
 
 	while (!remaining_ways.empty()) {
-		list<vector<const Node*> > outer_parts_now;
+		list<list<const Node*> > outer_parts_now;
 
 		{			//insert first way to outer parts
 			const vector<const Node*> &nodes = (*remaining_ways.begin())->getNodes();
-			outer_parts_now.push_back(vector<const Node*>());
-			vector<const Node*> *outer_part = &(*outer_parts_now.rbegin());
+			outer_parts_now.push_back(list<const Node*>());
+			list<const Node*> &outer_part = *outer_parts_now.rbegin();
 			for (size_t i = 0; i < nodes.size(); i++)
-				outer_part->push_back(nodes[i]);
+				outer_part.push_back(nodes[i]);
 			remaining_ways.erase(remaining_ways.begin());
 		}
 
@@ -148,8 +148,9 @@ static bool AddPolygonToList(const list<const Way*> &ways, list<vector<XY> > *ou
 		for (list<const Way*>::iterator it = remaining_ways.begin(); it != remaining_ways.end(); it++) {
 
 				//may I join it with some existing way?
-			for (list<vector<const Node*> >::iterator it2 = outer_parts_now.begin(); it2 != outer_parts_now.end(); it2++) {
-				uint64_t last_id = (*it2->rbegin())->getId();
+			for (list<list<const Node*> >::iterator it2 = outer_parts_now.begin(); it2 != outer_parts_now.end(); it2++) {
+				const uint64_t first_id = (*it2->begin())->getId();
+				const uint64_t last_id = (*it2->rbegin())->getId();
 				const vector<const Node*> &nodes = (*it)->getNodes();
 
 				if (last_id == nodes[0]->getId()) {			//way continues on previous in normal order
@@ -167,23 +168,42 @@ static bool AddPolygonToList(const list<const Way*> &ways, list<vector<XY> > *ou
 					remaining_ways.erase(it);
 					goto NEW_WAY_PROBING;
 				}
+				else if (first_id == nodes[0]->getId()) {			//way continues before first way
+					for (size_t i = 1; i < nodes.size(); i++)
+						it2->push_front(nodes[i]);
+
+					remaining_ways.erase(it);
+					goto NEW_WAY_PROBING;
+				}
+				else if (first_id == nodes[nodes.size()-1]->getId()) {			//the same loop in reverse order
+					for (size_t i = nodes.size()-2; true; i--) {
+						it2->push_front(nodes[i]);
+						if (i == 0) break;
+					}
+					remaining_ways.erase(it);
+					goto NEW_WAY_PROBING;
+				}
 			}
 		}
 
 				  //now fix list of nodes from duplicates, eventually reverse to clockwise order
-		for (list<vector<const Node*> >::const_iterator it = outer_parts_now.begin(); it != outer_parts_now.end(); it++) {
+		for (list<list<const Node*> >::const_iterator it = outer_parts_now.begin(); it != outer_parts_now.end(); it++) {
 			output_list->push_back(vector<XY>());
 			vector<XY> &output_part = *output_list->rbegin();
 			size_t count_of_two_same_points = 0;
 
-			for (size_t i = 0; i < it->size(); i++) {
-				const double x = (*it)[i]->getLon();
-				const double y = (*it)[i]->getLat();
+			{
+				const Node *prevNode = NULL;
+				for (list<const Node*>::const_iterator it2 = it->begin(); it2 != it->end(); it2++) {
+					const double x = (*it2)->getLon();
+					const double y = (*it2)->getLat();
 
-				if (i > 0 && x == (*it)[i-1]->getLon() && y == (*it)[i-1]->getLat()) {
-					count_of_two_same_points++;		//two same points
+					if (prevNode != NULL && x == prevNode->getLon() && y == prevNode->getLat()) {
+						count_of_two_same_points++;		//two same points
+					}
+					else output_part.push_back(XY(x, y));
+					prevNode = *it2;
 				}
-				else output_part.push_back(XY(x, y));
 			}
 
 			if (count_of_two_same_points > 0 && !g_quiet_mode)
