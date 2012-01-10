@@ -207,11 +207,16 @@ void Primitives::getDisusedAttributes(multimap<size_t,string> *output) const {
 }
 
 struct LoadXmlStruct {
-	Primitives *primitives;
+	Primitives &primitives;
 	Primitive *current_primitive;
+	bool current_primitive_is_deleted;
+
+	LoadXmlStruct(Primitives &primitives)
+	 : primitives(primitives), current_primitive(NULL), current_primitive_is_deleted(false) {
+	}
 };
 
-void XmlStartElement(void *user_data, const char *name, const char **attributes) {
+static void XmlStartElement(void *user_data, const char *name, const char **attributes) {
 	LoadXmlStruct* data = static_cast<LoadXmlStruct*>(user_data);
 
 	if (strcmp(name, "node") == 0) {
@@ -232,13 +237,18 @@ void XmlStartElement(void *user_data, const char *name, const char **attributes)
 				lon = atof(attributes[i+1]);
 				lon_set = true;
 			}
+			else if (strcmp(attributes[i], "action") == 0 && strcmp(attributes[i+1], "delete") == 0) {
+				data->current_primitive_is_deleted = true;
+				return;
+			}
 		}
 
 		if (id_set && lat_set && lon_set) {
 			Node *node = new Node(id, lat, lon);
-			if (data->current_primitive != NULL) cerr << "Node with id " << id << " is in other element!" << endl;
+			if (data->current_primitive != NULL || data->current_primitive_is_deleted)
+				cerr << "Node with id " << id << " is in other element!" << endl;
 			data->current_primitive = node;
-			data->primitives->addNode(id, node);
+			data->primitives.addNode(id, node);
 		}
 		else cerr << "Found <node> without mandatory fields!" << endl;
 	}
@@ -251,13 +261,18 @@ void XmlStartElement(void *user_data, const char *name, const char **attributes)
 				id = atol(attributes[i+1]);
 				id_set = true;
 			}
+			else if (strcmp(attributes[i], "action") == 0 && strcmp(attributes[i+1], "delete") == 0) {
+				data->current_primitive_is_deleted = true;
+				return;
+			}
 		}
 
 		if (id_set) {
 			Way *way = new Way(id);
-			if (data->current_primitive != NULL) cerr << "Way with id " << id << " is in other element!" << endl;
+			if (data->current_primitive != NULL || data->current_primitive_is_deleted)
+				cerr << "Way with id " << id << " is in other element!" << endl;
 			data->current_primitive = way;
-			data->primitives->addWay(id, way);
+			data->primitives.addWay(id, way);
 		}
 		else cerr << "Found <way> without mandatory fields!" << endl;
 	}
@@ -270,18 +285,24 @@ void XmlStartElement(void *user_data, const char *name, const char **attributes)
 				id = atol(attributes[i+1]);
 				id_set = true;
 			}
+			else if (strcmp(attributes[i], "action") == 0 && strcmp(attributes[i+1], "delete") == 0) {
+				data->current_primitive_is_deleted = true;
+				return;
+			}
 		}
 
 		if (id_set) {
 			Relation *relation = new Relation(id);
-			if (data->current_primitive != NULL) cerr << "Relation with id " << id << " is in other element!" << endl;
+			if (data->current_primitive != NULL || data->current_primitive_is_deleted)
+				cerr << "Relation with id " << id << " is in other element!" << endl;
 			data->current_primitive = relation;
-			data->primitives->addRelation(id, relation);
+			data->primitives.addRelation(id, relation);
 		}
 		else cerr << "Found <relation> without mandatory fields!" << endl;
 	}
 	else if (strcmp(name, "tag") == 0) {
-		if (data->current_primitive == NULL) {
+		if (data->current_primitive_is_deleted) { }
+		else if (data->current_primitive == NULL) {
 			cerr << "Element <tag> outside tags!" << endl;
 		}
 		else {
@@ -297,17 +318,18 @@ void XmlStartElement(void *user_data, const char *name, const char **attributes)
 			}
 
 			if (key != NULL && value != NULL) {
-				if (!data->primitives->isAttributeIgnored(key, value)) {
-					if (!data->primitives->isAttributeLightlyIgnored(key, value))
-						data->primitives->setExistingAttribute(key, value);
+				if (!data->primitives.isAttributeIgnored(key, value)) {
+					if (!data->primitives.isAttributeLightlyIgnored(key, value))
+						data->primitives.setExistingAttribute(key, value);
 					data->current_primitive->setAttribute(key, value);
 				}
 			}
-			else cerr << "Found <way> without mandatory fields!" << endl;
+			else cerr << "Found <tag> without mandatory fields!" << endl;
 		}
 	}
 	else if (strcmp(name, "nd") == 0) {
-		if (data->current_primitive == NULL || dynamic_cast<Way*>(data->current_primitive) == NULL) {
+		if (data->current_primitive_is_deleted) { }
+		else if (data->current_primitive == NULL || dynamic_cast<Way*>(data->current_primitive) == NULL) {
 			cerr << "Element <nd> outside <way> tag!" << endl;
 		}
 		else {
@@ -322,15 +344,16 @@ void XmlStartElement(void *user_data, const char *name, const char **attributes)
 			}
 
 			if (id_set) {
-				const Node *node = data->primitives->getNode(id);
-				if (node == NULL); //it's ok cerr << "Node with id " << id << " isn't defined before defining way." << endl;
+				const Node *node = data->primitives.getNode(id);
+				if (node == NULL) { } //it's ok cerr << "Node with id " << id << " isn't defined before defining way." << endl;
 				else dynamic_cast<Way*>(data->current_primitive)->addNodeToWay(node);
 			}
 			else cerr << "Found <nd> with no mandatory fields!" << endl;
 		}
 	}
 	else if (strcmp(name, "member") == 0) {
-		if (data->current_primitive == NULL || dynamic_cast<Relation*>(data->current_primitive) == NULL) {
+		if (data->current_primitive_is_deleted) { }
+		else if (data->current_primitive == NULL || dynamic_cast<Relation*>(data->current_primitive) == NULL) {
 			cerr << "Element <member> outside <relation> tag!" << endl;
 		}
 		else {
@@ -361,9 +384,9 @@ void XmlStartElement(void *user_data, const char *name, const char **attributes)
 
 			if (is_way_set && member_id_set && role != NULL) {
 				Primitive *primitive;
-				if (!is_way) primitive = data->primitives->getNode(member_id);
+				if (!is_way) primitive = data->primitives.getNode(member_id);
 				else {
-					primitive = data->primitives->getWay(member_id);
+					primitive = data->primitives.getWay(member_id);
 					if (primitive != NULL)
 						dynamic_cast<Way*>(primitive)->addWayToRelation(dynamic_cast<Relation*>(data->current_primitive));
 				}
@@ -398,16 +421,17 @@ void XmlStartElement(void *user_data, const char *name, const char **attributes)
 		}
 
 		if (minlat_set && minlon_set && maxlat_set && maxlon_set) {
-			if (!data->primitives->isBoundsSet()) {
-				data->primitives->setBounds(minlat, minlon, maxlat, maxlon);
+			if (!data->primitives.areBoundsSetByXY()) {
+				if (!data->primitives.areBoundsSetInFile())
+					data->primitives.setBounds(minlat, minlon, maxlat, maxlon);
+				else cerr << "Bounds are set more than once!" << endl;
 			}
-			else cerr << "Bounds is set more than once!" << endl;
 		}
 		else cerr << "Found <bounds> with no mandatory fields!" << endl;
 	}
 }
 
-void XmlCharacterData(void *user_data, const XML_Char *buffer, int len) {
+static void XmlCharacterData(void *user_data, const XML_Char *buffer, int len) {
 	for (int i = 0; i < len; i++) {
 		if (buffer[i] > ' ' || buffer[i] < 0) {
 			cerr << "Unknown character data in XML file: " << (int)buffer[i] << ", context: "<< string(buffer, len) << endl;
@@ -416,11 +440,15 @@ void XmlCharacterData(void *user_data, const XML_Char *buffer, int len) {
 	}
 }
 
-void XmlEndElement(void *user_data, const char *name) {
+static void XmlEndElement(void *user_data, const char *name) {
 	if (strcmp(name, "node") == 0 || strcmp(name, "way") == 0 || strcmp(name, "relation") == 0) {
 		LoadXmlStruct* data = static_cast<LoadXmlStruct*>(user_data);
-		if (data->current_primitive == NULL) cerr << "Internal error in XML parser (closing of not-opened tag " << name << ")!" << endl;
-		data->current_primitive = NULL;
+		if (data->current_primitive_is_deleted)
+			data->current_primitive_is_deleted = false;
+		else {
+			if (data->current_primitive == NULL) cerr << "Internal error in XML parser (closing of not-opened tag " << name << ")!" << endl;
+			else data->current_primitive = NULL;
+		}
 	}
 }
 
@@ -430,9 +458,7 @@ bool Primitives::loadFromXml(const char *filename) {
 		cerr << "Cannot open file " << filename << "!" << endl;
 		return false;
 	}
-	LoadXmlStruct load_xml_struct;
-	load_xml_struct.primitives = this;
-	load_xml_struct.current_primitive = NULL;
+	LoadXmlStruct load_xml_struct(*this);
 
 	XML_Parser parser = XML_ParserCreate(NULL);
 	XML_SetUserData(parser, &load_xml_struct);
@@ -458,7 +484,7 @@ bool Primitives::loadFromXml(const char *filename) {
 	XML_ParserFree(parser);
 	fclose(fp);
 
-	if (!this->isBoundsSet()) {			//bounds are not set, so get it from data
+	if (!this->areBoundsSetByXY() && !this->areBoundsSetInFile()) {  //bounds are not set, so guess it from data
 		this->view_rect.minlat = 10000;			//some nonsens
 		this->view_rect.maxlat = -10000;
 		this->view_rect.minlon = 10000;

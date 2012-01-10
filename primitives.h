@@ -158,7 +158,8 @@ class Primitives {
 	bool isAttributeLightlyIgnored(const char *key, const char *value) const;
 	void setExistingAttribute(const char *key, const char *value);
 	bool loadFromXml(const char *filename);
-	bool isBoundsSet() const { return (this->bounds_set || this->bounds_set_by_x_y); }
+	bool areBoundsSetByXY() const { return (this->bounds_set_by_x_y); }
+	bool areBoundsSetInFile() const { return (this->bounds_set); }
 	Rect getViewRect() const { return this->view_rect; }
 	void setBounds(double minlat, double minlon, double maxlat, double maxlon);
 	void addNode(uint64_t id, Node *node) {
