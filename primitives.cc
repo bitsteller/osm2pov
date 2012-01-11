@@ -144,45 +144,43 @@ void Primitives::getMultiPolygonsWithAttribute(list<MultiPolygon*> *output, cons
 
 			for (vector<const Relation*>::const_iterator it2 = relations.begin(); it2 != relations.end(); it2++) {
 				const char *role = (*it2)->getRoleForId(it->second->getId());
+				if (ids_used_in_relations.find(it->second->getId()) != ids_used_in_relations.end()) {
+					goto NEXT_WAY;			//is used in relation already
+				}
 				if (strcmp(role, "outer") == 0) {
-					if (ids_used_in_relations.find(it->second->getId()) != ids_used_in_relations.end()) {
-						goto NEXT_WAY;			//is used in relation already
-					}
-					else {  //isn't used in relation
-						MultiPolygon *multipolygon = new MultiPolygon(*it2, this->interest_rect);
-						const vector<const PrimitiveRole*> &members = (*it2)->getRelationMembers();
-						for (vector<const PrimitiveRole*>::const_iterator it3 = members.begin(); it3 != members.end(); it3++) {
-							if ((*it3)->role == "outer") {		//exist more outer ways for this polygon
-								const Way *way = dynamic_cast<const Way*>(&(*it3)->primitive);
-								if (way == NULL) cerr << "Outer element other than way in relation " << (*it2)->getId() << ", ignoring." << endl;
-								else if ((*it3)->primitive.getId() < it->second->getId()) {		//I make it only once; when processing way with lowest id
-									delete multipolygon;
-									goto NEXT_WAY;
-								}
-								else multipolygon->addOuterPart(way);
+					MultiPolygon *multipolygon = new MultiPolygon(*it2, this->interest_rect);
+					const vector<const PrimitiveRole*> &members = (*it2)->getRelationMembers();
+					for (vector<const PrimitiveRole*>::const_iterator it3 = members.begin(); it3 != members.end(); it3++) {
+						if ((*it3)->role == "outer") {		//exists more outer ways for this polygon
+							const Way *way = dynamic_cast<const Way*>(&(*it3)->primitive);
+							if (way == NULL) cerr << "Outer element other than way in relation " << (*it2)->getId() << ", ignoring." << endl;
+							else if ((*it3)->primitive.getId() < it->second->getId()) {		//I make it only once; when processing way with lowest id
+								delete multipolygon;
+								goto NEXT_WAY;
 							}
-							else if ((*it3)->role == "inner") {
-								const Way *way = dynamic_cast<const Way*>(&(*it3)->primitive);
-								if (way == NULL) cerr << "Inner element other than way in relation " << (*it2)->getId() << ", ignoring." << endl;
-								else multipolygon->addHole(way);
-							}
+							else multipolygon->addOuterPart(way);
 						}
-						multipolygon->setDone();
-						if (multipolygon->hasAttribute(key, value) && multipolygon->isValid()) output->push_back(multipolygon);
-						else delete multipolygon;
-						goto NEXT_WAY;
+						else if ((*it3)->role == "inner") {
+							const Way *way = dynamic_cast<const Way*>(&(*it3)->primitive);
+							if (way == NULL) cerr << "Inner element other than way in relation " << (*it2)->getId() << ", ignoring." << endl;
+							else multipolygon->addHole(way);
+						}
 					}
+					multipolygon->setDone();
+					if (multipolygon->hasAttribute(key, value) && multipolygon->isValid()) output->push_back(multipolygon);
+					else delete multipolygon;
+					goto NEXT_WAY;
 				}
-/*				else if (strcmp(role, "inner") == 0) {
+				else if (strcmp(role, "inner") == 0) {
 					//if exists some way with the same searched attributes and have "outer" role, ignore this "inner" way
-					const vector<const PrimitiveRole*> *members = (*it2)->getRelationMembers();
-					for (vector<const PrimitiveRole*>::const_iterator it3 = members->begin(); it3 != members->end(); it3++) {
+					const vector<const PrimitiveRole*> &members = (*it2)->getRelationMembers();
+					for (vector<const PrimitiveRole*>::const_iterator it3 = members.begin(); it3 != members.end(); it3++) {
 						if ((*it3)->role == "outer") {
-							if ((*it3)->primitive->hasAttribute(key, value)) goto NEXT_WAY;
+							if ((*it3)->primitive.hasAttribute(key, value)) goto NEXT_WAY;
 						}
 					}
 				}
-*/			}
+			}
 
 			//isn't in any relation, so add as common way
 			MultiPolygon *multipolygon = new MultiPolygon(NULL, this->interest_rect);
