@@ -1,0 +1,7 @@
+*.o
+.DS_Store
+.deps
+*.log
+*.status
+osm2pov
+Makefile
