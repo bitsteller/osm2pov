@@ -15,7 +15,7 @@ class PovWriter {
 	PovWriter(const char *filename, const Rect &view_rect, bool fix_size_to_square);
 	~PovWriter();
 	bool isOpened() const {
-		return this->fs;
+		return (this->fs.is_open());
 	}
 	void writeComment(const char *comment);
 	void writeTriangle(uint64_t id, const Triangle &triangle, double height, const char *style);

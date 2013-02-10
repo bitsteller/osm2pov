@@ -37,6 +37,8 @@ PovWriter::PovWriter(const char *filename, const Rect &view_rect, bool fix_size_
 
 	this->fs.precision(12);
 
+	this->fs << "#version 3.7;" << endl;
+	this->fs << "global_settings {assumed_gamma 2.0}" << endl;
 	this->fs << "camera { orthographic location <0,0,-230> direction <0,0,13>";
 	this->fs << " up <0," << ((this->view_rect.maxlat-this->view_rect.minlat)*76.54/LAT_WEIGHT) << ",0>";
 	this->fs << " right <" << ((this->view_rect.maxlon-this->view_rect.minlon)*100/LON_WEIGHT) << ",0,0>";
